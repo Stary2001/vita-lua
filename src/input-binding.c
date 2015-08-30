@@ -1,6 +1,7 @@
+#ifndef JIT
 #include <lua.h>
-#include <lualib.h>
 #include <lauxlib.h>
+
 #include <debugnet.h>
 
 #include <psp2/ctrl.h>
@@ -61,11 +62,12 @@ const luaL_Reg input[] =
 
 void open_input(lua_State *lua)
 {
-	debugNetPrintf(DEBUG, "newlib\n");
+#if JIT
+	luaL_register(lua, "input", input);
+#else
 	luaL_newlib(lua, input);
-	debugNetPrintf(DEBUG, "setglobal\n");
 	lua_setglobal(lua, "input");
-
+#endif
 	lua_newtable(lua);
         setint(lua, "select", PSP2_CTRL_SELECT);
         setint(lua, "start",  PSP2_CTRL_START);
@@ -82,3 +84,4 @@ void open_input(lua_State *lua)
         setint(lua, "any", PSP2_CTRL_ANY);
 	lua_setglobal(lua, "button");
 }
+#endif
