@@ -1,4 +1,9 @@
+# Objects
 src/*.o
 src/ffi/*.o
 *.elf
 *.velf
+
+# Vim Files
+*.un~
+*.swp

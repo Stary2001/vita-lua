@@ -1,4 +1,4 @@
-ip = "192.168.0.13"
+url = "http://arachno/psvita.lua"
 
 ffi = require 'ffi'
 
@@ -44,17 +44,17 @@ ffi.C.sceHttpInit(100)
 
 function request(url)
   local C = ffi.C
-  template = C.sceHttpCreateTemplate("abcd", C.PSP2_HTTP_VERSION_1_1, 0);
-  conn = C.sceHttpCreateConnectionWithURL(template, "http://" .. ip .. "/code.lua", 0)
-  req = C.sceHttpCreateRequestWithURL(conn, C.PSP2_HTTP_METHOD_GET, "http://" .. ip .. "/code.lua", 0)
+  local template = C.sceHttpCreateTemplate("abcd", C.PSP2_HTTP_VERSION_1_1, 0);
+  local conn = C.sceHttpCreateConnectionWithURL(template, url, 0)
+  local req = C.sceHttpCreateRequestWithURL(conn, C.PSP2_HTTP_METHOD_GET, url, 0)
   if C.sceHttpSendRequest(req, nil, 0) < 0 then
     print("err")
     return nil
   end
-  len = ffi.new("uint64_t[1]")
+  local len = ffi.new("uint64_t[1]")
   C.sceHttpGetResponseContentLength(req, len)
-  len = tonumber(len[0])
-  buf = ffi.new("uint8_t[?]", len)
+  local len = tonumber(len[0])
+  local buf = ffi.new("uint8_t[?]", len)
   C.sceHttpReadData(req, buf, len)
   return ffi.string(buf, len)
 end
@@ -62,17 +62,18 @@ end
 function exec(url)
   print("exec - req")
   local data = request(url)
-  print("loadstring")
+  print("Loading code...")
   local func, err = loadstring(data)
-  print(tostring(func) .. " " .. tostring(err))
   if func == nil then
-    print(err)
+    print("Error: "..err)
     return
   end
-  func()
+  local success, err = pcall(func)
+  if not success then
+    print("Error: "..err)
+  end
 end
 
-local url = "http://" .. ip .. "/code.lua"
 exec(url)
 
 ffi.C.sceHttpTerm()
