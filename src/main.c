@@ -39,9 +39,7 @@ void test()
 }
 
 #ifdef JIT
-void open_vita2d();
-void open_input();
-void open_http();
+void open_ffi(lua_State *l);
 #else
 void open_vita2d(lua_State *l);
 void open_input(lua_State *l);
@@ -67,9 +65,7 @@ int main()
 
 	luaL_openlibs(lua);
 	#ifdef JIT
-	open_vita2d();
-	open_input();
-	open_http();
+	open_ffi(lua);
 	#else
 	open_vita2d(lua);
 	open_input(lua);

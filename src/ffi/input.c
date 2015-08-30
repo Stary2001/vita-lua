@@ -1,7 +1,8 @@
 #include <stddef.h>
 #include <stub_ffi.h>
 #include <psp2/ctrl.h>
-void open_input()
+
+void ffi_register_input()
 {
 	static Function funcs[] =
 	{

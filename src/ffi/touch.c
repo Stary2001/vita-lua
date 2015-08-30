@@ -2,7 +2,7 @@
 #include <stub_ffi.h>
 #include <psp2/touch.h>
 
-void open_touch()
+void ffi_register_touch()
 {
 	static Function funcs[] =
 	{

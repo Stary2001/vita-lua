@@ -1,7 +1,8 @@
 #include <stddef.h>
 #include <stub_ffi.h>
 #include <vita2d.h>
-void open_vita2d()
+
+void ffi_register_vita2d()
 {
 	static Function funcs[] =
 	{

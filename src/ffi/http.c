@@ -1,7 +1,8 @@
 #include <stddef.h>
 #include <stub_ffi.h>
 #include <psp2/net/http.h>
-void open_http()
+
+void ffi_register_http()
 {
 	static Function funcs[] =
 	{

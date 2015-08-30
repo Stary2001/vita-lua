@@ -2,7 +2,7 @@
 #include <stub_ffi.h>
 #include <psp2/audioout.h>
 
-void open_sound()
+void ffi_register_sound()
 {
 	static Function funcs[] =
 	{

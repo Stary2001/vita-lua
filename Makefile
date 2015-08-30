@@ -3,6 +3,9 @@ TARGET_LUAJIT = vita-lua-jit
 
 BINDINGS = src/vita2d-binding.o src/input-binding.o src/http-binding.o
 FFI_BINDINGS = src/ffi/vita2d.c src/ffi/http.o src/ffi/input.o src/ffi/touch.o src/ffi/sound.o
+FFI_GLUE = lua/http.lua
+FFI_GLUE_C = $(patsubst %.lua, %.c, $(FFI_GLUE))
+FFI_GLUE_O = $(patsubst %.lua, %.o, $(FFI_GLUE))
 OBJS   = src/main.o
 
 LIBS = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSceDisplay_stub -lSceGxm_stub -lSceCtrl_stub -lSceNet_stub -lSceNetCtl_stub -lSceHttp_stub -lSceAudio_stub
@@ -27,11 +30,17 @@ jit: $(TARGET_LUAJIT).velf
 	$(PREFIX)-strip -g $<
 	vita-elf-create $< $@ $(DB) >/dev/null
 
-$(TARGET_LUAJIT).elf: $(OBJS) $(FFI_BINDINGS)
+%.c: %.lua
+	./generate_init.sh $<
+
+src/ffi_init.c:
+	./generate_ffi_init_list.sh
+
+$(TARGET_LUAJIT).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.c $(FFI_GLUE_O)
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 $(TARGET_LUA).elf: $(OBJS) $(BINDINGS)
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUA_LIBS) -o $@
 
 clean:
-	@rm -rf $(TARGET_LUA).velf  $(TARGET_LUAJIT).velf $(TARGET_LUA).elf $(TARGET_LUAJIT).velf $(OBJS) $(BINDINGS)
+	@rm -rf $(TARGET_LUA).velf  $(TARGET_LUAJIT).velf $(TARGET_LUA).elf $(TARGET_LUAJIT).velf $(OBJS) $(BINDINGS) $(FFI_GLUE_O) $(FFI_GLUE_C) src/ffi_init.c
