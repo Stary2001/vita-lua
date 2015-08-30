@@ -38,7 +38,11 @@ void test()
 	debugNetPrintf(DEBUG, "Hello, C!\n");
 }
 
-#ifndef JIT
+#ifdef JIT
+void open_vita2d();
+void open_input();
+void open_http();
+#else
 void open_vita2d(lua_State *l);
 void open_input(lua_State *l);
 void open_http(lua_State *l);
@@ -62,7 +66,11 @@ int main()
 	lua_atpanic(lua, panic);
 
 	luaL_openlibs(lua);
-	#ifndef JIT
+	#ifdef JIT
+	open_vita2d();
+	open_input();
+	open_http();
+	#else
 	open_vita2d(lua);
 	open_input(lua);
 	open_http(lua);
@@ -77,12 +85,17 @@ int main()
 	lua_rawset(lua, -3);
 	lua_pop(lua, 1);
 
-	luaL_loadfile(lua, "cache0:/VitaDefilerClient/Documents/http.lua");
-	if(lua_pcall(lua, 0, 0, 0) != 0)
+	if(luaL_loadfile(lua, "cache0:/VitaDefilerClient/Documents/script.lua") == 0)
 	{
-		debugNetPrintf(DEBUG, "err: %s\n", lua_tostring(lua, -1));
+		if(lua_pcall(lua, 0, 0, 0) != 0)
+		{
+			debugNetPrintf(DEBUG, "err: %s\n", lua_tostring(lua, -1));
+		}
 	}
-	debugNetPrintf(DEBUG, "calld\n");
+	else
+	{
+		debugNetPrintf(DEBUG, "error calling loadfile\n");
+	}
 	
 	sceKernelExitProcess(0);
 	return 0;

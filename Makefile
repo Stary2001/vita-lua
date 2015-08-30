@@ -2,9 +2,10 @@ TARGET_LUA = vita-lua-5.3
 TARGET_LUAJIT = vita-lua-jit
 
 BINDINGS = src/vita2d-binding.o src/input-binding.o src/http-binding.o
-OBJS   = src/main.o 
+FFI_BINDINGS = src/ffi/vita2d.c src/ffi/http.o src/ffi/input.o src/ffi/touch.o src/ffi/sound.o
+OBJS   = src/main.o
 
-LIBS = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSceDisplay_stub -lSceGxm_stub -lSceCtrl_stub -lSceNet_stub -lSceNetCtl_stub  -lSceHttp_stub
+LIBS = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSceDisplay_stub -lSceGxm_stub -lSceCtrl_stub -lSceNet_stub -lSceNetCtl_stub -lSceHttp_stub -lSceAudio_stub
 LUA_LIBS = -llua -lm
 LUAJIT_LIBS = -lluajit-5.1 -lm
 LUAJIT_CFLAGS = -DJIT -I$(VITASDK)/arm-vita-eabi/include/luajit-2.0
@@ -26,7 +27,7 @@ jit: $(TARGET_LUAJIT).velf
 	$(PREFIX)-strip -g $<
 	vita-elf-create $< $@ $(DB) >/dev/null
 
-$(TARGET_LUAJIT).elf: $(OBJS)
+$(TARGET_LUAJIT).elf: $(OBJS) $(FFI_BINDINGS)
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 $(TARGET_LUA).elf: $(OBJS) $(BINDINGS)

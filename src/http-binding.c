@@ -75,14 +75,11 @@ int bind_sceHttpSendRequest(lua_State *l)
 
 int bind_http_read_data(lua_State *l)
 {
-	debugNetPrintf(DEBUG, "read_data\n");
 	int req = luaL_checkinteger(l, 1);
 	unsigned long long len = 0;
 	sceHttpGetResponseContentLength(req, &len);
-	debugNetPrintf(DEBUG, "len %i\n", len);
 	char *data = malloc(len);
 	sceHttpReadData(req, data, len);
-	debugNetPrintf(DEBUG, "dat '%s'\n", data);
 	lua_pushlstring(l, data, len);
 	free(data);
 	return 1;
