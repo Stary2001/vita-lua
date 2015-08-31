@@ -24,17 +24,6 @@ int print(lua_State *l)
 	return 0;
 }
 
-int os_sleep(lua_State *l)
-{
-	sceKernelDelayThread((unsigned int)(luaL_checknumber(l, 1) * 1000000));
-	return 0;
-}
-
-void test()
-{
-	debugNetPrintf(DEBUG, "Hello, C!\n");
-}
-
 #ifdef JIT
 void open_ffi(lua_State *l);
 #else
@@ -45,16 +34,6 @@ void open_http(lua_State *l);
 
 int main()
 {
-	#ifdef JIT
-		Function funcs[] = 
-		{
-			{"test", test},
-			{NULL, NULL}
-		};
-		FunctionTable table = { .funcs = funcs, .next = NULL };
-		ffi_add_table(&table);
-	#endif
-
 	debugNetInit(DEBUGGER_IP, DEBUGGER_PORT, DEBUG);
 	debugNetPrintf(DEBUG, "creating\n");
 	lua_State *lua = luaL_newstate();
@@ -72,12 +51,6 @@ int main()
 	lua_pushcfunction(lua, print);
 	lua_setglobal(lua, "print");
 	
-	lua_getglobal(lua, "os");
-	lua_pushstring(lua, "sleep");
-	lua_pushcfunction(lua, os_sleep);
-	lua_rawset(lua, -3);
-	lua_pop(lua, 1);
-
 	if(luaL_loadfile(lua, "cache0:/VitaDefilerClient/Documents/script.lua") == 0)
 	{
 		if(lua_pcall(lua, 0, 0, 0) != 0)
