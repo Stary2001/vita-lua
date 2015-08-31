@@ -19,7 +19,7 @@ DB = db.json
 CC      = $(PREFIX)-gcc
 LD	= $(PREFIX)-ld
 
-DEBUGGER_IP = 192.168.1.5
+DEBUGGER_IP ?= $(shell ip addr list `ip route | grep default | grep -oP 'dev \K[a-z0-9]* '` | grep -oP 'inet \K[0-9\.]*')
 DEBUGGER_PORT = 18194
 DEFS = -DDEBUGGER_IP=\"$(DEBUGGER_IP)\" -DDEBUGGER_PORT=$(DEBUGGER_PORT)
 
