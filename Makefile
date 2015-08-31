@@ -2,8 +2,8 @@ TARGET_LUA = vita-lua-5.3
 TARGET_LUAJIT = vita-lua-jit
 
 BINDINGS = src/vita2d-binding.o src/input-binding.o src/http-binding.o
-FFI_BINDINGS = src/ffi/vita2d.c src/ffi/http.o src/ffi/input.o src/ffi/touch.o src/ffi/sound.o
-FFI_GLUE = lua/http.lua
+FFI_BINDINGS = src/ffi/vita2d.c src/ffi/http.o src/ffi/input.o src/ffi/touch.o src/ffi/sound.o src/ffi/misc.o
+FFI_GLUE = $(wildcard lua/*.lua)
 FFI_GLUE_C = $(patsubst %.lua, %.c, $(FFI_GLUE))
 FFI_GLUE_O = $(patsubst %.lua, %.o, $(FFI_GLUE))
 OBJS   = src/main.o
@@ -33,7 +33,7 @@ jit: $(TARGET_LUAJIT).velf
 %.c: %.lua
 	./generate_init.sh $<
 
-src/ffi_init.c:
+src/ffi_init.c: $(FFI_GLUE)
 	./generate_ffi_init_list.sh
 
 $(TARGET_LUAJIT).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.c $(FFI_GLUE_O)

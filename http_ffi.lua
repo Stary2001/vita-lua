@@ -1,4 +1,4 @@
-local url = "http://192.168.0.13/code.lua"
+local url = ""
 
 http.init()
 
