@@ -1,8 +1,10 @@
 # Objects
 src/*.o
 src/ffi/*.o
+lua/*.o
 *.elf
 *.velf
+src/ffi_init.c
 
 # Vim Files
 *.un~

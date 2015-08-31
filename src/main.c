@@ -11,9 +11,6 @@
 #include <debugnet.h>
 #include <vita2d.h>
 
-#define DEBUGGER_IP "192.168.0.13"
-#define DEBUGGER_PORT 18194
-
 int panic(lua_State *l)
 {
 	debugNetPrintf(DEBUG, "Lua paniced with '%s!'\n", lua_tostring(l, -1));

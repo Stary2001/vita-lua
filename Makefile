@@ -19,7 +19,11 @@ DB = db.json
 CC      = $(PREFIX)-gcc
 LD	= $(PREFIX)-ld
 
-CFLAGS  = -Wl,-q -Wall -O3 -std=gnu99
+DEBUGGER_IP = 192.168.1.5
+DEBUGGER_PORT = 18194
+DEFS = -DDEBUGGER_IP=\"$(DEBUGGER_IP)\" -DDEBUGGER_PORT=$(DEBUGGER_PORT)
+
+CFLAGS  = -Wl,-q -Wall -O3 -std=gnu99 $(DEFS)
 
 all: $(TARGET_LUA).velf
 
