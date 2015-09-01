@@ -488,6 +488,7 @@ local map = -- these functions just return void
   {"vita2d_draw_line", "draw_line"},
   {"vita2d_draw_rectangle", "draw_rectangle"},
   {"vita2d_draw_fill_circle", "draw_circle"},
+  {"vita2d_get_current_fb", "get_framebuffer"}
 }
 
 for k,v in pairs(map) do

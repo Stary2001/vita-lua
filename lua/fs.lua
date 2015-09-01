@@ -121,10 +121,12 @@ function fs.list(path)
   t = {}
 
   fd = ffi.C.sceIoDopen(path)
-  if d < 0 then return end
+  if fd < 0 then return end
   dirent = ffi.new("SceIoDirent[1]")
-  while ffi.C.ioDread(fd, dirent) do
-    t[#t + 1] = { name = dirent.d_name, directory = (bit.band(dirent.d_stat.st_attr, ffi.C.PSP2_S_IFDIR) ~= 0), size = tonumber(dirent.st_size) }
+  while ffi.C.sceIoDread(fd, dirent) > 0 do
+    local file = dirent[0]
+    print(file.d_name)
+    t[#t + 1] = { name = ffi.string(file.d_name), directory = (bit.band(file.d_stat.st_attr, ffi.C.PSP2_S_IFDIR) ~= 0), size = tonumber(file.d_stat.st_size) }
   end
   return t
 end
@@ -140,6 +142,10 @@ end
 function fs.chdir(path)
   if path == nil then 
     return fs.working_dir
+  end
+
+  if fs.is_relative(path) then
+    path = fs.working_dir .. "/" .. path
   end
 
   local tmp = fs.working_dir
