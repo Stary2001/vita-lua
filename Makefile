@@ -2,13 +2,13 @@ TARGET_LUA = vita-lua-5.3
 TARGET_LUAJIT = vita-lua-jit
 
 BINDINGS = src/vita2d-binding.o src/input-binding.o src/http-binding.o
-FFI_BINDINGS = src/ffi/vita2d.c src/ffi/http.o src/ffi/input.o src/ffi/touch.o src/ffi/sound.o src/ffi/misc.o
+FFI_BINDINGS = $(wildcard src/ffi/*.c)
 FFI_GLUE = $(wildcard lua/*.lua)
 FFI_GLUE_C = $(patsubst %.lua, %.c, $(FFI_GLUE))
 FFI_GLUE_O = $(patsubst %.lua, %.o, $(FFI_GLUE))
 OBJS   = src/main.o
 
-LIBS = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSceDisplay_stub -lSceGxm_stub -lSceCtrl_stub -lSceNet_stub -lSceNetCtl_stub -lSceHttp_stub -lSceAudio_stub
+LIBS = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSceDisplay_stub -lSceGxm_stub -lSceCtrl_stub -lSceNet_stub -lSceNetCtl_stub -lSceHttp_stub -lSceAudio_stub -lScePower_stub
 LUA_LIBS = -llua -lm
 LUAJIT_LIBS = -lluajit-5.1 -lm
 LUAJIT_CFLAGS = -DJIT -I$(VITASDK)/arm-vita-eabi/include/luajit-2.0

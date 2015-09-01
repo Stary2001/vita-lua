@@ -1,4 +1,4 @@
-local url = ""
+local url = "http://arachno/psvita.lua"
 
 http.init()
 
