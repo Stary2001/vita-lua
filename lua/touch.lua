@@ -1,4 +1,4 @@
-ffi = require 'ffi'
+local ffi = require 'ffi'
 
 ffi.cdef [[
 typedef uint8_t SceUInt8;

@@ -1,3 +1,5 @@
+local ffi = require 'ffi'
+
 ffi.cdef [[
 int scePowerIsBatteryCharging();
 int scePowerGetBatteryLifePercent();

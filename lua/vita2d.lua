@@ -1,8 +1,4 @@
-ffi = require 'ffi'
-
--- it appears that LuaJIT's C parser doesn't like
--- enums declared like this
--- SCE_GXM_TEXTURE_FORMAT_U8_000R = SCE_GXM_TEXTURE_BASE_FORMAT_U8 | SCE_GXM_TEXTURE_SWIZZLE1_000R,
+local ffi = require 'ffi'
 
 ffi.cdef [[
 
