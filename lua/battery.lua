@@ -13,7 +13,8 @@ int scePowerGetBatteryFullCapacity(); //?
 battery = {}
 
 function battery.is_charging()
-  return ffi.C.scePowerIsBatteryCharging() == 1
+  -- return ffi.C.scePowerIsBatteryCharging() == 1
+  return battery.has_charger() and battery.get_percent() ~= 100
 end
 
 function battery.get_percent()
@@ -24,7 +25,10 @@ function battery.has_charger()
   return ffi.C.scePowerIsPowerOnline() == 1
 end
 
-function battery.get_remaining_capacity()
+--[[
+-- unresolved syscalls
+
+ function battery.get_remaining_capacity()
   return ffi.C.scePowerGetBatteryRemainCapacity()
 end
 
@@ -39,3 +43,4 @@ end
 function battery.get_remaining_time()
   return ffi.C.scePowerGetBatteryLifeTime()
 end
+]]
