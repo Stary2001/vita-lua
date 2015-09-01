@@ -1,3 +1,4 @@
+-- vita2d
 local ffi = require 'ffi'
 
 ffi.cdef [[
@@ -558,9 +559,12 @@ function vita2d.create_empty_texture_format(w, h, format)
 end
 
 function vita2d.load_texture(f)
-  print(f)
   local ext = f:sub(#f-3, #f)
-  print(ext)
+
+  if fs.is_relative(f) then
+    f = fs.working_dir .. "/" .. f
+  end
+  
   if ext == ".png" then
     return ffi.gc(ffi.C.vita2d_load_PNG_file(f), ffi.C.vita2d_free_texture)
   elseif ext == ".jpg" or ext == "jpeg" then
@@ -571,6 +575,9 @@ function vita2d.load_texture(f)
 end
 
 function vita2d.load_font(f)
+  if fs.is_relative(f) then
+    f = fs.working_dir .. "/" .. f
+  end
   return ffi.gc(ffi.C.vita2d_load_font_file(f), ffi.C.vita2d_free_font)
 end
 

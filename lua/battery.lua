@@ -1,3 +1,4 @@
+-- battery
 local ffi = require 'ffi'
 
 ffi.cdef [[

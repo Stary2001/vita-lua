@@ -1,3 +1,4 @@
+-- input
 local bit = require 'bit'
 local ffi = require 'ffi'
 
