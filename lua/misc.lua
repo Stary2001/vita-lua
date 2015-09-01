@@ -6,6 +6,7 @@ ffi.cdef [[
 	typedef SceUInt64 SceKernelSysClock;
 	int sceKernelDelayThread(unsigned int delay);
 	int sceKernelGetProcessTime(SceKernelSysClock *c);
+	int sceKernelExitProcess(int r);
 ]]
 
 function os.sleep(s)
@@ -20,6 +21,10 @@ function os.clock()
   c = ffi.new('SceKernelSysClock[1]')
   ffi.C.sceKernelGetProcessTime(c)
   return tonumber(c[0]) / 1000000
+end
+
+function os.exit(r)
+  ffi.C.sceKernelExitProcess(r)
 end
 
 -- from http://lua-users.org/wiki/SimpleRound

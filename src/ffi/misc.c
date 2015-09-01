@@ -9,6 +9,7 @@ void ffi_register_misc()
 	{
 		{"sceKernelDelayThread", sceKernelDelayThread},
 		{"sceKernelGetProcessTime", sceKernelGetProcessTime},
+		{"sceKernelExitProcess", sceKernelExitProcess},
 		{NULL, NULL}
 	};
 	static FunctionTable table = { .funcs = funcs, .next = NULL };

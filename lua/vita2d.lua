@@ -582,4 +582,8 @@ function vita2d.load_font(f)
   return ffi.gc(ffi.C.vita2d_load_font_file(f), ffi.C.vita2d_free_font)
 end
 
+function vita2d.free_texture(tex)
+  ffi.C.vita2d_free_texture(ffi.gc(tex, nil))
+end
+
 -- void vita2d_font_draw_textf(vita2d_font *font, int x, int y, unsigned int color, unsigned int size, const char *text, ...); -- varargs and FFI don't mix very well
