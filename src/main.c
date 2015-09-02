@@ -1,7 +1,4 @@
-#ifdef JIT
 #include <stub_ffi.h>
-#endif
-
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
@@ -24,13 +21,7 @@ int print(lua_State *l)
 	return 0;
 }
 
-#ifdef JIT
 void open_ffi(lua_State *l);
-#else
-void open_vita2d(lua_State *l);
-void open_input(lua_State *l);
-void open_http(lua_State *l);
-#endif
 
 int main()
 {
@@ -40,13 +31,7 @@ int main()
 	lua_atpanic(lua, panic);
 
 	luaL_openlibs(lua);
-	#ifdef JIT
 	open_ffi(lua);
-	#else
-	open_vita2d(lua);
-	open_input(lua);
-	open_http(lua);
-	#endif
 
 	lua_pushcfunction(lua, print);
 	lua_setglobal(lua, "print");
