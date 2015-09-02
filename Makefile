@@ -1,5 +1,7 @@
 TARGET = vita-lua
 
+BOOTSCRIPT ?= src/boot.lua
+
 FFI_BINDINGS = $(wildcard src/ffi/*.c)
 FFI_GLUE = $(wildcard lua/*.lua)
 FFI_GLUE_C = $(patsubst %.lua, %.c, $(FFI_GLUE))
@@ -30,10 +32,13 @@ all: $(TARGET).velf
 %.c: %.lua
 	./generate_init.sh $<
 
+src/boot.c : $(BOOTSCRIPT)
+	./generate_bootc.sh $<
+
 src/ffi_init.c: $(FFI_GLUE)
 	./generate_ffi_init_list.sh
 
-$(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O)
+$(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/boot.o
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 clean:

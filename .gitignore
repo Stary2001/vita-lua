@@ -5,6 +5,7 @@ lua/*.o
 *.elf
 *.velf
 src/ffi_init.c
+src/boot.c
 
 # Vim Files
 *.un~

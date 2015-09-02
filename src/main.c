@@ -21,6 +21,7 @@ int print(lua_State *l)
 	return 0;
 }
 
+const char *bootscript_data;
 void open_ffi(lua_State *l);
 
 int main()
@@ -36,18 +37,20 @@ int main()
 	lua_pushcfunction(lua, print);
 	lua_setglobal(lua, "print");
 	
-	if(luaL_loadfile(lua, "cache0:/VitaDefilerClient/Documents/script.lua") == 0)
+	if(luaL_loadstring(lua, bootscript_data) == 0)
 	{
 		if(lua_pcall(lua, 0, 0, 0) != 0)
 		{
-			debugNetPrintf(DEBUG, "err: %s\n", lua_tostring(lua, -1));
+			debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
+			lua_pop(lua, 1);
 		}
 	}
 	else
 	{
-		debugNetPrintf(DEBUG, "error calling loadfile\n");
+		debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
+		lua_pop(lua, 1);
 	}
-	
+
 	sceKernelExitProcess(0);
 	return 0;
 }
