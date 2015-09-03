@@ -582,7 +582,7 @@ function vita2d.load_texture_data(t, buff)
   if t == "png" then
     return ffi.gc(ffi.C.vita2d_load_PNG_buffer(buff), ffi.C.vita2d_free_texture)
   elseif t == "jpg" or ext == "jpeg" then
-    return ffi.gc(ffi.C.vita2d_load_JPEG_buffer(buff), ffi.C.vita2d_free_texture)
+    return ffi.gc(ffi.C.vita2d_load_JPEG_buffer(buff, #buff), ffi.C.vita2d_free_texture)
   elseif t == "bmp" then
     return ffi.gc(ffi.C.vita2d_load_BMP_buffer(buff), ffi.C.vita2d_free_texture)
   end
