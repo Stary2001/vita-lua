@@ -39,19 +39,51 @@ int sceHttpAddRequestHeader(int id, const char *name, const char *value, unsigne
 int sceHttpRemoveRequestHeader(int id, const char *name);
 ]]
 
+local C = ffi.C
+
 http = {}
 local template
 
+local req_mt =
+{
+  __index =
+  {
+    len = function(self)
+      local len = ffi.new("uint64_t[1]")
+      C.sceHttpGetResponseContentLength(self.req, len)
+      return tonumber(len[0])
+    end,
+
+    read = function(self, spec)
+      local len
+      if spec == "*all" or spec == "*a" or spec == nil then
+        len = self:len()
+      elseif type(spec) == "number" then
+        len = spec
+      else
+        error("invalid read() specification")
+      end
+      local buf = ffi.new("uint8_t[?]", len)
+      print(tostring(C.sceHttpReadData(self.req, buf, len)))
+      return ffi.string(buf, len)
+    end,
+
+    close = function(self)
+      C.sceHttpDeleteRequest(self.req)
+      C.sceHttpDeleteConnection(self.conn)
+    end
+  }
+}
+
 function http.init()
-  ffi.C.sceHttpInit(100)
+  C.sceHttpInit(100)
 end
 
 function http.term()
-  ffi.C.sceHttpTerm()
+  C.sceHttpTerm()
 end
 
 function http.request(meth, url, post_data)
-  local C = ffi.C
   if meth == "get" then
     meth = C.PSP2_HTTP_METHOD_GET
   elseif meth == "post" then
@@ -68,15 +100,9 @@ function http.request(meth, url, post_data)
     print("err")
     return nil
   end
-  local len = ffi.new("uint64_t[1]")
-  C.sceHttpGetResponseContentLength(req, len)
-  len = tonumber(len[0])
-  local buf = ffi.new("uint8_t[?]", len)
-  C.sceHttpReadData(req, buf, len)
-  local s = ffi.string(buf, len)
-  C.sceHttpDeleteRequest(req)
-  C.sceHttpDeleteConnection(conn)
-  return s
+  local r = { req = req, conn = conn }
+  setmetatable(r, req_mt)
+  return r
 end
 
 function http.get(url)

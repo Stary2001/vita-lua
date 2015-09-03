@@ -575,11 +575,27 @@ function vita2d.load_texture(f)
   end
 end
 
+function vita2d.load_texture_data(t, buff)
+  if buff == nil then return end
+  if t == "png" then
+    return ffi.gc(ffi.C.vita2d_load_PNG_buffer(buff), ffi.C.vita2d_free_texture)
+  elseif t == "jpg" or ext == "jpeg" then
+    return ffi.gc(ffi.C.vita2d_load_JPEG_buffer(buff), ffi.C.vita2d_free_texture)
+  elseif t == "bmp" then
+    return ffi.gc(ffi.C.vita2d_load_BMP_buffer(buff), ffi.C.vita2d_free_texture)
+  end
+end
+
 function vita2d.load_font(f)
   if fs.is_relative(f) then
     f = fs.working_dir .. "/" .. f
   end
   return ffi.gc(ffi.C.vita2d_load_font_file(f), ffi.C.vita2d_free_font)
+end
+
+function vita2d.load_font_data(buff)
+  if buff == nil then return end
+  return ffi.gc(ffi.C.vita2d_load_font_mem(buff, #buff), ffi.C.vita2d_free_font)
 end
 
 function vita2d.free_texture(tex)

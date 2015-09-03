@@ -88,6 +88,13 @@ buttons = {
   ["any"] = ffi.C.PSP2_CTRL_ANY
 }
 
+local ctrl_mt = { __index = {} }
+
+for k,v in pairs(buttons) do
+  ctrl_mt.__index[k] = function (self) return bit.band(self.buttons, buttons[k]) ~= 0 end
+end
+
+local ctrl_data = ffi.metatype("SceCtrlData", ctrl_mt)
 
 function input.set_mode(mode)
   if mode == "digital" then

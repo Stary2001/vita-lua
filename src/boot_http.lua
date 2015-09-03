@@ -1,11 +1,14 @@
-local url = "http://arachno/psvita.lua"
+local url = "http://stary2001.co.uk/lua/boot.lua"
 
 http.init()
 
 function exec(url)
-  local data = http.get(url)
+  local req = http.get(url)
+  local code = req:read("*a")
+  req:close()
+
   print("Loading code...")
-  local func, err = loadstring(data)
+  local func, err = loadstring(code)
   if func == nil then
     print("Error: "..err)
     return

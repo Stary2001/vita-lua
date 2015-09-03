@@ -131,6 +131,10 @@ function physfs.init()
   ffi.C.PHYSFS_init(nil)
 end
 
+function physfs.deinit()
+  ffi.C.PHYSFS_deinit()
+end
+
 function physfs.open(path, mode)
   if mode:sub(1,1) == "r" then
     f = ffi.C.PHYSFS_openRead(path)
@@ -152,16 +156,24 @@ local file_mt =
       return tonumber(ffi.C.PHYSFS_fileLength(self))
     end,
 
-    read = function(self, len)
-      if len == nil then
+    read = function(self, spec)
+      local len
+
+      if type(spec) == "number" then
+        len = spec
+      end
+
+      if spec == "*all" or spec == "*a" then
         len = self:length()
       end
+
       local buf = ffi.new("uint8_t[?]", len)
-      local ret = ffi.C.PHYSFS_read(self, buf, len, 1)
-      if ret < 1 then
+      local ret = tonumber(ffi.C.PHYSFS_read(self, buf, 1, len))
+
+      if ret == 0 then
         return nil
       else
-        return ffi.string(buf, len)
+        return ffi.string(buf, ret)
       end
     end,
    
@@ -172,7 +184,6 @@ local file_mt =
 }
 
 local PHYSFS_File = ffi.metatype("PHYSFS_File", file_mt)
-
 
 function physfs.mount(path, mount, append)
   if append  then append = 1 else append = 0 end
