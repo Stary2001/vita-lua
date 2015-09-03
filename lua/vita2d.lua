@@ -546,7 +546,9 @@ local font_mt =
     end,
     text_width = ffi.C.vita2d_font_text_width,
     text_height = ffi.C.vita2d_font_text_height,
-    draw_text = ffi.C.vita2d_font_draw_text
+    draw_text = function(self, x, y, color, size, text)
+      ffi.C.vita2d_font_draw_text(self, x, y, color, size, tostring(text))
+    end
   }
 }
 local vita2d_font = ffi.metatype("vita2d_font", font_mt)
