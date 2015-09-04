@@ -12,6 +12,10 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
 
   local selected = selected or 1
   local num = 18
+  if title then
+    num = 17
+  end
+  
   while true do
     local pad = input.peek()
     vita2d.start_drawing()
