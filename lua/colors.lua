@@ -1,3 +1,4 @@
+-- colors
 local bit = require 'bit'
 
 colors = {}

@@ -3,6 +3,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#include <string.h>
 #include <psp2/kernel/processmgr.h>
 #include <psp2/kernel/threadmgr.h>
 #include <debugnet.h>
@@ -22,6 +23,8 @@ int print(lua_State *l)
 }
 
 const char *bootscript_data;
+const char *defaultfont_data;
+unsigned int defaultfont_data_len;
 void open_ffi(lua_State *l);
 
 int main()
@@ -34,9 +37,16 @@ int main()
 	luaL_openlibs(lua);
 	open_ffi(lua);
 
+	lua_getglobal(lua, "vita2d");
+	lua_pushstring(lua, "default_font_data");
+	lua_pushlstring(lua, defaultfont_data, defaultfont_data_len);
+	lua_settable(lua, -3);
+
 	lua_pushcfunction(lua, print);
 	lua_setglobal(lua, "print");
-	
+
+	vita2d_init();
+
 	if(luaL_loadstring(lua, bootscript_data) == 0)
 	{
 		if(lua_pcall(lua, 0, 0, 0) != 0)
@@ -50,6 +60,8 @@ int main()
 		debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
 		lua_pop(lua, 1);
 	}
+
+	vita2d_fini();
 
 	sceKernelExitProcess(0);
 	return 0;
