@@ -14,7 +14,7 @@ typedef struct SceDateTime {
 } SceDateTime;
 typedef int64_t SceInt64;
 typedef int SceUID;
-typedef int SceMode; 
+typedef int SceMode;
 typedef SceInt64 SceOff;
 
 enum {
@@ -111,6 +111,8 @@ int sceIoDread(SceUID fd, SceIoDirent *dir);
 int sceIoDclose(SceUID fd);
 int sceIoMkdir(const char *dir, SceMode mode);
 int sceIoRmdir(const char *path);
+int sceIoGetstat(const char *file, SceIoStat *stat);
+int sceIoChstat(const char *file, SceIoStat *stat, int bits);
 // int sceIoChdir(const char *path);
 ]]
 
@@ -139,8 +141,16 @@ function fs.rmdir(path)
   ffi.C.sceIoRmdir(path)
 end
 
+function fs.isdir(path)
+  local stat = ffi.new("SceIoStat[1]")
+  if ffi.C.sceIoGetstat(path, stat) < 0 then
+    return nil
+  end
+  return bit.band(stat[0].st_mode, ffi.C.PSP2_SO_IFMT) == ffi.C.PSP2_SO_IFDIR
+end
+
 function fs.chdir(path)
-  if path == nil then 
+  if path == nil then
     return fs.working_dir
   end
 
@@ -151,10 +161,10 @@ function fs.chdir(path)
   local tmp = fs.working_dir
   fs.working_dir = path
   return tmp
-end 
+end
 
 function fs.is_relative(path)
-  return not path:find("^(.-):")
+  return not path:find("^(.-):/")
 end
 
 local orig_io = io

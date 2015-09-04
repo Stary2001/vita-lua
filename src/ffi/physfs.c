@@ -6,7 +6,7 @@ void ffi_register_physfs()
 {
 	static Function funcs[] =
 	{
-                {"PHYSFS_addToSearchPath", PHYSFS_addToSearchPath},
+		{"PHYSFS_addToSearchPath", PHYSFS_addToSearchPath},
 		{"PHYSFS_close", PHYSFS_close},
 		{"PHYSFS_deinit", PHYSFS_deinit},
 		{"PHYSFS_delete", PHYSFS_delete},

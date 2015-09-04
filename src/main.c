@@ -2,6 +2,7 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <physfs.h>
 
 #include <string.h>
 #include <psp2/kernel/processmgr.h>
@@ -34,6 +35,9 @@ int main()
 	lua_State *lua = luaL_newstate();
 	lua_atpanic(lua, panic);
 
+	vita2d_init();
+	PHYSFS_init(NULL);
+
 	luaL_openlibs(lua);
 	open_ffi(lua);
 
@@ -44,8 +48,6 @@ int main()
 
 	lua_pushcfunction(lua, print);
 	lua_setglobal(lua, "print");
-
-	vita2d_init();
 
 	if(luaL_loadstring(lua, bootscript_data) == 0)
 	{
@@ -61,6 +63,7 @@ int main()
 		lua_pop(lua, 1);
 	}
 
+	PHYSFS_deinit();
 	vita2d_fini();
 
 	sceKernelExitProcess(0);

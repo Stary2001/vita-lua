@@ -136,6 +136,7 @@ function physfs.deinit()
 end
 
 function physfs.open(path, mode)
+  local mode = mode or "r"
   if mode:sub(1,1) == "r" then
     f = ffi.C.PHYSFS_openRead(path)
   elseif mode:sub(1,1) == "w" then
@@ -176,7 +177,7 @@ local file_mt =
         return ffi.string(buf, ret)
       end
     end,
-   
+
     close = function(self)
       return ffi.C.PHYSFS_close(self) ~= 0
     end
@@ -186,8 +187,8 @@ local file_mt =
 local PHYSFS_File = ffi.metatype("PHYSFS_File", file_mt)
 
 function physfs.mount(path, mount, append)
-  if append  then append = 1 else append = 0 end
-  return ffi.C.PHYSFS_mount(path, mount, append) ~= 0
+  if append then append = 1 else append = 0 end
+  return ffi.C.PHYSFS_mount(path, mount or "", append) ~= 0
 end
 
 function physfs.exists(path)
