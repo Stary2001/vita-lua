@@ -282,7 +282,7 @@ typedef enum SceGxmTextureFormat {
         SCE_GXM_TEXTURE_FORMAT_S32_1RRR = SCE_GXM_TEXTURE_BASE_FORMAT_S32 | SCE_GXM_TEXTURE_SWIZZLE1_1RRR,
         SCE_GXM_TEXTURE_FORMAT_S32_R000 = SCE_GXM_TEXTURE_BASE_FORMAT_S32 | SCE_GXM_TEXTURE_SWIZZLE1_R000,
         SCE_GXM_TEXTURE_FORMAT_S32_R111 = SCE_GXM_TEXTURE_BASE_FORMAT_S32 | SCE_GXM_TEXTURE_SWIZZLE1_R111,
-	SCE_GXM_TEXTURE_FORMAT_S32_R = SCE_GXM_TEXTURE_BASE_FORMAT_S32 | SCE_GXM_TEXTURE_SWIZZLE1_R,
+        SCE_GXM_TEXTURE_FORMAT_S32_R = SCE_GXM_TEXTURE_BASE_FORMAT_S32 | SCE_GXM_TEXTURE_SWIZZLE1_R,
 
         SCE_GXM_TEXTURE_FORMAT_SE5M9M9M9_BGR = SCE_GXM_TEXTURE_BASE_FORMAT_SE5M9M9M9 | SCE_GXM_TEXTURE_SWIZZLE3_BGR,
         SCE_GXM_TEXTURE_FORMAT_SE5M9M9M9_RGB = SCE_GXM_TEXTURE_BASE_FORMAT_SE5M9M9M9 | SCE_GXM_TEXTURE_SWIZZLE3_RGB,
@@ -567,7 +567,7 @@ function vita2d.load_texture(f)
   if fs.is_relative(f) then
     f = fs.working_dir .. "/" .. f
   end
-  
+
   if ext == ".png" then
     return ffi.gc(ffi.C.vita2d_load_PNG_file(f), ffi.C.vita2d_free_texture)
   elseif ext == ".jpg" or ext == "jpeg" then
@@ -588,16 +588,20 @@ function vita2d.load_texture_data(t, buff)
   end
 end
 
-function vita2d.load_font(f)
-  if fs.is_relative(f) then
-    f = fs.working_dir .. "/" .. f
-  end
-  return ffi.gc(ffi.C.vita2d_load_font_file(f), ffi.C.vita2d_free_font)
-end
-
 function vita2d.load_font_data(buff)
   if buff == nil then return end
   return ffi.gc(ffi.C.vita2d_load_font_mem(buff, #buff), ffi.C.vita2d_free_font)
+end
+
+function vita2d.load_font(f)
+  if not f then
+    return vita2d.load_font_data(vita2d.default_font_data)
+  else
+    if fs.is_relative(f) then
+      f = fs.working_dir .. "/" .. f
+    end
+    return ffi.gc(ffi.C.vita2d_load_font_file(f), ffi.C.vita2d_free_font)
+  end
 end
 
 function vita2d.free_texture(tex)

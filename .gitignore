@@ -4,8 +4,11 @@ src/ffi/*.o
 lua/*.o
 *.elf
 *.velf
+
+# Generated source
 src/ffi_init.c
 src/boot.c
+src/font.c
 
 # Vim Files
 *.un~

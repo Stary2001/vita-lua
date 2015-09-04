@@ -110,8 +110,10 @@ local req_mt =
       local r = C.sceHttpReadData(self.req, buf, len)
       if r < 0 then
         return nil, messages[r]
+      elseif r == 0 then
+        return nil, "eof"
       end
-      return ffi.string(buf, len)
+      return ffi.string(buf, r)
     end,
 
     close = function(self)

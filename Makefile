@@ -1,6 +1,7 @@
 TARGET = vita-lua
 
-BOOTSCRIPT ?= src/boot.lua
+BOOTSCRIPT ?= src/boot/boot.lua
+FONT ?= src/font/UbuntuMono-R.ttf
 
 FFI_BINDINGS = $(wildcard src/ffi/*.c)
 FFI_GLUE = $(wildcard lua/*.lua)
@@ -30,15 +31,18 @@ all: $(TARGET).velf
 	vita-elf-create $< $@ $(DB) >/dev/null
 
 %.c: %.lua
-	./generate_init.sh $<
+	./scripts/generate_init.sh $<
 
-src/boot.c : $(BOOTSCRIPT)
-	./generate_bootc.sh $<
+src/boot.c: $(BOOTSCRIPT)
+	./scripts/generate_bootc.sh $<
+
+src/font.c: $(FONT)
+	./scripts/generate_defaultfont.sh $<
 
 src/ffi_init.c: $(FFI_GLUE)
-	./generate_ffi_init_list.sh
+	./scripts/generate_ffi_init_list.sh
 
-$(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/boot.o
+$(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/font.o src/boot.o
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 clean:
