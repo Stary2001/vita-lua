@@ -3,7 +3,8 @@ local url = "http://stary2001.co.uk/lua/boot.lua"
 http.init()
 
 function exec(url)
-  local req = http.get(url)
+  local status, req = http.get(url)
+  if req == nil then return end
   local code = req:read("*a")
   req:close()
 

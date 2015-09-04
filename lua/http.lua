@@ -41,6 +41,49 @@ int sceHttpRemoveRequestHeader(int id, const char *name);
 
 local C = ffi.C
 
+local messages =
+{
+  -2143088639 = "BEFORE_INIT",
+  -2143088608 = "ALREADY_INITED",
+  -2143088607 = "BUSY",
+  -2143088606 = "OUT_OF_MEMORY",
+  -2143088603 = "NOT_FOUND",
+  -2143088534 = "INVALID_VERSION",
+  -2143088384 = "INVALID_ID",
+  -2143088380 = "OUT_OF_SIZE",
+  -2143088130 = "INVALID_VALUE",
+  -2143080352 = "INVALID_URL",
+  -2143088543 = "UNKNOWN_SCHEME",
+  -2143088541 = "NETWORK",
+  -2143088540 = "BAD_RESPONSE",
+  -2143088539 = "BEFORE_SEND",
+  -2143088538 = "AFTER_SEND",
+  -2143088536 = "TIMEOUT",
+  -2143088535 = "UNKOWN_AUTH_TYPE",
+  -2143088533 = "UNKNOWN_METHOD",
+  -2143088529 = "READ_BY_HEAD_METHOD",
+  -2143088528 = "NOT_IN_COM",
+  -2143088527 = "NO_CONTENT_LENGTH",
+  -2143088526 = "CHUNK_ENC",
+  -2143088525 = "TOO_LARGE_RESPONSE_HEADER",
+  -2143088523 = "SSL",
+  -2143088512 = "ABORTED",
+  -2143088511 = "UNKNOWN",
+  -2143084507 = "PARSE_HTTP_NOT_FOUND",
+  -2143084448 = "PARSE_HTTP_INVALID_RESPONSE",
+  -2143084034 = "PARSE_HTTP_INVALID_VALUE",
+  -2143068159 = "RESOLVER_EPACKET",
+  -2143068158 = "RESOLVER_ENODNS",
+  -2143068157 = "RESOLVER_ETIMEDOUT",
+  -2143068156 = "RESOLVER_ENOSUPPORT",
+  -2143068155 = "RESOLVER_EFORMAT",
+  -2143068154 = "RESOLVER_ESERVERFAILURE",
+  -2143068153 = "RESOLVER_ENOHOST",
+  -2143068152 = "RESOLVER_ENOTIMPLEMENTED",
+  -2143068151 = "RESOLVER_ESERVERREFUSED",
+  -2143068150 = "RESOLVER_ENORECORD"
+}
+
 http = {}
 local template
 
@@ -64,7 +107,10 @@ local req_mt =
         error("invalid read() specification")
       end
       local buf = ffi.new("uint8_t[?]", len)
-      print(tostring(C.sceHttpReadData(self.req, buf, len)))
+      local r = C.sceHttpReadData(self.req, buf, len)
+      if r < 0 then
+        return nil, messages[r]
+      end
       return ffi.string(buf, len)
     end,
 
@@ -95,14 +141,30 @@ function http.request(meth, url, post_data)
   end
 
   local conn = C.sceHttpCreateConnectionWithURL(template, url, 0)
-  local req = C.sceHttpCreateRequestWithURL(conn, C.PSP2_HTTP_METHOD_GET, url, post_data and #post_data or 0)
-  if C.sceHttpSendRequest(req, post_data, post_data and #post_data or 0) < 0 then
-    print("err")
-    return nil
+  if conn == 0 then
+    return nil, "createConnection failed"
   end
+
+  local req = C.sceHttpCreateRequestWithURL(conn, meth, url, post_data and #post_data or 0)
+  if req == 0 then
+    return nil, "createRequest failed"
+  end
+
+  local r = C.sceHttpSendRequest(req, post_data, post_data and #post_data or 0)
+  if r < 0 then
+    return nil, messages[r]
+  end
+  local status = ffi.new('int[1]')
+  r = C.sceHttpGetStatusCode(req, status)
+  if r < 0 then
+    C.sceHttpDeleteRequest(req)
+    C.sceHttpDeleteConnection(conn)
+    return nil, messages[r]
+  end
+
   local r = { req = req, conn = conn }
   setmetatable(r, req_mt)
-  return r
+  return status[0], r
 end
 
 function http.get(url)
