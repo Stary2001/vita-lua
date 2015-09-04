@@ -15,7 +15,7 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
   if title then
     num = 17
   end
-  
+
   while true do
     local pad = input.peek()
     vita2d.start_drawing()
@@ -41,7 +41,7 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
     if hook then
       abort, res = hook(options[selected], old_pad, pad)
       if abort then
-        return res, abort
+        return res, selected, abort
       end
     end
 
@@ -50,9 +50,9 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
     elseif old_pad:down() and not pad:down() and selected < #options then
       selected = selected + 1
     elseif old_pad:cross() and not pad:cross() then
-      return options[selected], false
+      return options[selected], selected, false
     elseif old_pad:circle() and not pad:circle() then
-      return nil
+      return nil, selected, false
     end
 
     old_pad = pad
@@ -89,7 +89,9 @@ function ui.view_image(tex, font_custom)
   vita2d.set_clear_color(colors.black)
 end
 
-function ui.choose_file(startdir, title, hook)
+function ui.choose_file(startdir, title, selected, hook)
+  local old_dir
+
   local startdir = string.gsub(startdir or "/", "/$", "")
   local path = {""}
   if startdir then
@@ -107,23 +109,31 @@ function ui.choose_file(startdir, title, hook)
     if not string.find(table.concat(path, "/") .. "/", "^/$") then
       table.insert(t, 1, "..")
     end
-    res, abort = ui.choose(t, title or table.concat(path, "/").."/", nil, function(res, old_pad, pad)
+
+    -- hack!
+    if old_dir then
+      selected = table.find(t, old_dir)
+      old_dir = nil
+    end
+
+    res, selected, abort = ui.choose(t, title or table.concat(path, "/").."/", selected, function(res, old_pad, pad)
       if hook then
-        return hook(res, old_pad, pad, table.concat(path, "/") .. "/" .. res)
+        return hook(res, old_pad, pad, table.concat(path, "/") .. "/" .. res), selected
       end
     end)
     if abort then
-      return res
+      return res, table.concat(path, "/"), selected
     end
     if res == ".." or res == nil then
       if #path > 1 then
-        table.remove(path)
+        old_dir = table.remove(path)
       end
     else
       if physfs.is_dir(table.concat(path, "/") .. "/" .. res) then
         table.insert(path, res)
+        selected = 1
       else
-        return (table.concat(path, "/") .. "/" .. res), table.concat(path, "/")
+        return (table.concat(path, "/") .. "/" .. res), table.concat(path, "/"), selected
       end
     end
   end

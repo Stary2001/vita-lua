@@ -94,9 +94,11 @@ handlers["ask"] = (function(file, ext)
 	end
 end)
 
+local selected
+
 -- Loop.
 while true do
-	file, tmpdir = ui.choose_file(dir, nil, (function(sel, old_pad, pad, path)
+	file, dir, selected = ui.choose_file(dir, nil, selected, (function(sel, old_pad, pad, path)
 		if old_pad:triangle() and not pad:triangle() then
 			handlers["ask"](path, file_extension(path))
 			return true, nil
