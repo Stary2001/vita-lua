@@ -76,9 +76,21 @@ function ui.pager(text, title, line, selectedcolor, normalcolor, font_custom)
   local count = #tmp_lines
   local numwidth = #(tostring(count))
 
+  local maxlength = 62 - numwidth
+
   for n, line in pairs(tmp_lines) do
-    local padded = string.rpad(tostring(n), numwidth)
-    table.insert(lines, n, padded.."| ".. line)
+    local i = 0
+    for s in line:gmatch((".?"):rep(maxlength)) do
+      i = i + 1
+      if i == 1 then
+        local padded = string.rpad(tostring(n), numwidth)
+        table.insert(lines, padded.."| ".. s)
+      else
+        if s and s ~= "" then
+          table.insert(lines, string.rep(" ", numwidth).."| ".. s)
+        end
+      end
+    end
   end
 
   while true do
