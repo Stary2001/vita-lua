@@ -153,13 +153,8 @@ function ui.choose_file(startdir, title, selected, hook)
   local startdir = string.gsub(startdir or "/", "/$", "")
   local path = {""}
   if startdir then
-    local leftover = string.gsub(startdir, "..-/", function(e)
-      local t = string.gsub(e, "^/(.+)/$", "%1")
-      table.insert(path, t)
-      return ""
-    end)
-    if leftover then
-      table.insert(path, leftover)
+    for p in startdir:gmatch("[^/]+") do
+      table.insert(path, p)
     end
   end
   while true do

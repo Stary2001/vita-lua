@@ -94,8 +94,6 @@ local handlers = {
   ["font"] = handler_font
 }
 handlers["ask"] = (function(file, ext)
-  print(file)
-  print(ext)
   if file == nil then
     return
   end
