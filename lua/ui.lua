@@ -6,8 +6,6 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
   local optioncolor = optioncolor or colors.white
   local titlecolor = titlecolor or colors.blue
 
-  local hooks = hooks or {}
-
   local old_pad = input.peek()
 
   local selected = selected or 1
@@ -53,6 +51,66 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
       return options[selected], selected, false
     elseif old_pad:circle() and not pad:circle() then
       return nil, selected, false
+    end
+
+    old_pad = pad
+  end
+end
+
+function ui.pager(text, title, line, selectedcolor, normalcolor, font_custom)
+  local font_to_use = font_custom or font or vita2d.load_font()
+  local selectedcolor = selectedcolor or colors.red
+  local normalcolor = normalcolor or colors.blue
+
+  local old_pad = input.peek()
+
+  local line = line or 1
+
+  local num = 18
+  if title then
+    num = 17
+  end
+
+  local lines = {}
+  local tmp_lines = string.lines(text.."\n")
+  local count = #tmp_lines
+  local numwidth = #(tostring(count))
+
+  for n, line in pairs(tmp_lines) do
+    local padded = string.rpad(tostring(n), numwidth)
+    table.insert(lines, n, padded.."| ".. line)
+  end
+
+  while true do
+    local pad = input.peek()
+    vita2d.start_drawing()
+    vita2d.clear_screen()
+
+    local p = 0
+
+    local min = (line <= num and 1 or line - num + 1)
+    local max = math.min(#lines, (line <= num and num or line))
+
+    if title then
+      font_to_use:draw_text(0, 0, colors.purple, 30, title)
+      p = 1
+    end
+    for i=min, max do
+      font_to_use:draw_text(0, p * 30, i == line and selectedcolor or normalcolor, 30, lines[i])
+      p = p + 1
+    end
+
+    vita2d.end_drawing()
+    vita2d.swap_buffers()
+
+    if old_pad:up() and not pad:up() and line > 1 then
+      line = line - 1
+    elseif old_pad:down() and not pad:down() and line < #lines then
+      line = line + 1
+    elseif old_pad:cross() and not pad:cross() then
+      return
+    elseif old_pad:circle() and not pad:circle() then
+      return
     end
 
     old_pad = pad
