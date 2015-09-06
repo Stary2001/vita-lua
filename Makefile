@@ -1,6 +1,6 @@
 TARGET = vita-lua
 
-BOOTSCRIPT ?= src/boot/boot.lua
+BOOTSCRIPT ?= src/boot/vitafm.lua
 FONT ?= src/font/UbuntuMono-R.ttf
 
 FFI_BINDINGS = $(wildcard src/ffi/*.c)
