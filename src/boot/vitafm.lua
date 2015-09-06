@@ -7,6 +7,8 @@ local confpath = "/VitaDefilerClient/Documents/vitafm.cfg"
 
 physfs.mount(physfsroot)
 
+vitafm = {}
+
 -- Helpers
 local function file_extension(path)
   return tostring(path):match("^.+(%..+)$")
@@ -50,17 +52,19 @@ local function config_parse(file)
   end
 end
 
--- Actual programs
-local function program_viewer(file)
+-- Actual vitafm.programs
+function vitafm.viewer(file)
   local f = physfs.open(file)
   if f ~= nil then
     local data = f:read("*a")
     f:close()
-    ui.pager(data, file)
+    ui.pager(data, file, true)
+  else
+    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
   end
 end
 
-local function program_lua(file)
+function vitafm.lua(file)
   print("Lua file: ".. file)
   local f = physfs.open(file)
   if f ~= nil then
@@ -69,17 +73,21 @@ local function program_lua(file)
     local fn, err = loadstring(data)
     if err ~= nil then
       print("File manager: Lua syntax error: "..tostring(err))
+      ui.error("Lua Syntax Error", "Error:\n" .. tostring(err))
       return
     end
     local success, err = pcall(fn)
     if not success then
       print("File manager: Lua script error: "..tostring(err))
+      ui.error("Lua Script Error", "Error:\n" .. tostring(err))
       return
     end
+  else
+    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
   end
 end
 
-local function program_imgview(file, ext)
+function vitafm.imgview(file, ext)
   local ext = file_extension(file)
   if ext == nil then
     ext = ui.choose({".png", ".jpg", ".bmp"}, "What format is the file?")
@@ -93,19 +101,23 @@ local function program_imgview(file, ext)
     f:close()
     local image = vita2d.load_texture_data(ext:gsub("%.", ""), data)
     ui.view_image(image)
+  else
+    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
   end
 end
 
-local function program_font(file)
+function vitafm.font(file)
   local f = physfs.open(file)
   if f ~= nil then
     local data = f:read("*a")
     f:close()
     font = vita2d.load_font_data(data)
+  else
+    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
   end
 end
 
-local function program_mount(file)
+function vitafm.mount(file)
   physfs.mount(physfsroot .. file)
 end
 
@@ -133,12 +145,12 @@ local types = {
 table.sort(types)
 
 -- "Program" Registration.
-local programs = {
-  ["viewer"] = program_viewer,
-  ["lua"] = program_lua,
-  ["mount"] = program_mount,
-  ["imgview"] = program_imgview,
-  ["font"] = program_font
+vitafm.programs = {
+  ["viewer"] = vitafm.viewer,
+  ["lua"] = vitafm.lua,
+  ["mount"] = vitafm.mount,
+  ["imgview"] = vitafm.imgview,
+  ["font"] = vitafm.font
 }
 local function add_programs(path)
   local dir = physfs.list(path)
@@ -153,21 +165,21 @@ local function add_programs(path)
         if err ~= nil then
           print("File manager: Lua plugin load error: "..tostring(err))
         else
-          programs[v:gsub("%.lua$", "")] = fn
+          vitafm.programs[v:gsub("%.lua$", "")] = fn
         end
       end
     end
   end
 end
 
-function run_prog(prog, ...) -- Global, so other programs that get loaded by this can run others.
-  return programs[prog](...)
+function vitafm.exec(prog, ...) -- Global, so other vitafm.programs that get loaded by this can run others.
+  return vitafm.programs[prog](...)
 end
 
-local function call_prog(command, file, ext)
+function vitafm.run_shell(command, vars)
   local succ, split = os.shellparse(command)
   if not succ then
-    os.choose({"Okay."}, "Error: ".. split)
+    ui.error("Command Parser Error", "Error:\n" .. split)
     return
   end
   local prog = split[1]
@@ -175,13 +187,36 @@ local function call_prog(command, file, ext)
 
   local args = {}
   for k, v in pairs(split) do
-    args[k] = v:gsub("%%f", file):gsub("%%e", ext or "")
+    local val
+    local nv = tonumber(val)
+    if v == "true" then
+      val = true
+    elseif v == "false" then
+      val = false
+    elseif nv ~= nil then
+      val = nv
+    else
+      local tmp = v
+      for varname, replacement in pairs(vars) do
+        --tmp = tmp:gsub(varname:gsub("%%", "%%%1"), replacement)
+        tmp = tmp:gsub(varname, replacement)
+      end
+      val = tmp
+    end
+    args[k] = val
   end
-  return run_prog(prog, unpack(args))
+  return vitafm.exec(prog, unpack(args))
+end
+
+function vitafm.call_prog(command, file, ext)
+  return vitafm.run_shell(command, {
+    ["%%f"] = file,
+    ["%%e"] = ext
+  })
 end
 
 -- Ask for program to launch it with.
-programs["ask"] = (function(file, ext)
+function vitafm.ask(file, ext)
   if not string.find(file or "", "^/") then
     return
   end
@@ -198,8 +233,10 @@ programs["ask"] = (function(file, ext)
       table.insert(keys, k .. " - " .. v)
     end
   end
-  table.insert(keys, "Open with...")
-  table.insert(keys, "Back")
+  local l = #keys
+  keys[l+1] = nil
+  keys[l+2] = "Open with..."
+  keys[l+3] = "Back"
   while true do
     opt = ui.choose(keys, "Launch as... (Extension: ".. (ext or "none") .. ")", sel)
     if opt then
@@ -207,19 +244,20 @@ programs["ask"] = (function(file, ext)
       if opt == "Back" then
         return
       elseif opt == "Open with..." then
-        prog = ui.choose(table.keys(programs), "Open with...")
+        prog = ui.choose(table.keys(vitafm.programs), "Open with...")
         if prog then
-          return call_prog(prog.." %f", file)
+          return vitafm.call_prog(prog.." %f", file)
         end
         return
       elseif types[res] then
-        return call_prog(types[res], file, res)
+        return vitafm.call_prog(types[res], file, res)
       end
     else
       return
     end
   end
-end)
+end
+vitafm.programs["ask"] = vitafm.ask
 
 -- Parse Config
 local function parse_config(path)
@@ -250,20 +288,21 @@ while true do
   end
   file, dir, selected = ui.choose_file(dir, nil, selected, (function(sel, old_pad, pad, path)
     if old_pad:triangle() and not pad:triangle() then -- "Open as" menu
-      programs["ask"](path, file_extension(path))
+      vitafm.programs["ask"](path, file_extension(path))
       return true, nil
     elseif old_pad:square() and not pad:square() then -- Tool menu
       local title = "VitaFM Menu"
       local menuitems = {
         "Run Program",
+        nil,
         "Exit VitaFM",
         "Back"
       }
       res = ui.choose(menuitems, title)
       if res == "Run Program" then
-        prog = ui.choose(table.keys(programs), "Open Program...")
+        prog = ui.choose(table.keys(vitafm.programs), "Open Program...")
         if prog then
-          return run_prog(prog)
+          return vitafm.exec(prog)
         end
       elseif res == "Exit VitaFM" then
         os.exit(0)
@@ -274,9 +313,9 @@ while true do
   if file ~= nil then
     local ext = file_extension(file)
     if types[ext] then
-      call_prog(types[ext], file, ext)
+      vitafm.call_prog(types[ext], file, ext)
     elseif types["*"] then
-      call_prog(types["*"], file, ext)
+      vitafm.call_prog(types["*"], file, ext)
     end
   end
 end

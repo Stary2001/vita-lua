@@ -29,7 +29,9 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
       p = 1
     end
     for i=min, max do
-      font_to_use:draw_text(0, p * 30, i == selected and selectedoptcolor or optioncolor, 30, options[i])
+      if options[i] then
+        font_to_use:draw_text(0, p * 30, i == selected and selectedoptcolor or optioncolor, 30, options[i])
+      end
       p = p + 1
     end
 
@@ -45,8 +47,14 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
 
     if old_pad:up() and not pad:up() and selected > 1 then
       selected = selected - 1
+      if options[selected] == nil then
+        selected = selected - 1
+      end
     elseif old_pad:down() and not pad:down() and selected < #options then
       selected = selected + 1
+      if options[selected] == nil then
+        selected = selected + 1
+      end
     elseif old_pad:cross() and not pad:cross() then
       return options[selected], selected, false
     elseif old_pad:circle() and not pad:circle() then
@@ -57,7 +65,77 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
   end
 end
 
-function ui.pager(text, title, line, selectedcolor, normalcolor, font_custom)
+function ui.error(title, message, font)
+  local title = " " .. (title or "") .. " "
+  local font_to_use = font_custom or font or vita2d.load_font()
+
+  -- Fixed variables.
+  local vita_w = 960
+  local vita_h = 544
+  local half_w = vita_w/2
+  local half_h = vita_h/2
+  local maxlength = 64
+
+  -- Math! Yay!
+  local errorthing_w, errorthing_h = font_to_use:text_size(30, "/!\\")
+  local titlewidth_w, titlewidth_h = font_to_use:text_size(30, title)
+
+  local first_error_w = half_w - titlewidth_w/2 - errorthing_w
+  local text_w = half_w - titlewidth_w/2
+  local second_error_w = half_w + titlewidth_w/2
+
+  local old_pad = input.peek()
+
+  local messagearray = {}
+
+  if not string.find(message, "\n$") then
+    message = message .. "\n"
+  end
+  string.gsub(message, "(.-)\r?\n", function(line)
+    for s in line:gmatch((".?"):rep(maxlength)) do
+      if s then
+        table.insert(messagearray, s)
+      end
+    end
+  end)
+  if #messagearray == 0 then
+    for s in message:gmatch((".?"):rep(maxlength)) do
+      if s then
+        table.insert(messagearray, s)
+      end
+    end
+  end
+
+  while true do
+    local pad = input.peek()
+
+    vita2d.start_drawing()
+    vita2d.clear_screen()
+
+    font_to_use:draw_text(first_error_w, 0, colors.red, 30, "/!\\")
+    font_to_use:draw_text(text_w, 0, colors.white, 30, title)
+    font_to_use:draw_text(second_error_w, 0, colors.red, 30, "/!\\")
+
+    for l, c in pairs(messagearray) do
+      font_to_use:draw_text(0, l * 30, colors.white, 30, c)
+    end
+
+    vita2d.end_drawing()
+    vita2d.swap_buffers()
+
+    if old_pad:cross() and not pad:cross() then
+      return true
+    elseif old_pad:circle() and not pad:circle() then
+      return false
+    end
+
+    old_pad = pad
+  end
+end
+
+function ui.pager(text, title, displaylinenos, line, selectedcolor, normalcolor, font_custom)
+  local text = text or ""
+  local displaylinenos = displaylinenos or false
   local font_to_use = font_custom or font or vita2d.load_font()
   local selectedcolor = selectedcolor or colors.red
   local normalcolor = normalcolor or colors.blue
@@ -72,7 +150,10 @@ function ui.pager(text, title, line, selectedcolor, normalcolor, font_custom)
   end
 
   local lines = {}
-  local tmp_lines = string.lines(text.."\n")
+  if not string.find(text, "\n$") then
+    text = text.."\n"
+  end
+  local tmp_lines = string.lines(text)
   local count = #tmp_lines
   local numwidth = #(tostring(count))
 
@@ -82,13 +163,17 @@ function ui.pager(text, title, line, selectedcolor, normalcolor, font_custom)
     local i = 0
     for s in line:gmatch((".?"):rep(maxlength)) do
       i = i + 1
-      if i == 1 then
-        local padded = string.rpad(tostring(n), numwidth)
-        table.insert(lines, padded.."| ".. s)
-      else
-        if s and s ~= "" then
-          table.insert(lines, string.rep(" ", numwidth).."| ".. s)
+      if displaylinenos then
+        if i == 1 then
+          local padded = string.rpad(tostring(n), numwidth)
+          table.insert(lines, padded.."| ".. s)
+        else
+          if s and s ~= "" then
+            table.insert(lines, string.rep(" ", numwidth).."| ".. s)
+          end
         end
+      else
+        table.insert(lines, s)
       end
     end
   end
