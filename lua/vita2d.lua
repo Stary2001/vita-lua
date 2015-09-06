@@ -539,10 +539,11 @@ local font_mt =
   __index =
   {
     text_size = function(self, size, text)
-      w = ffi.new("int[1]")
-      h = ffi.new("int[1]")
-      ffi.C.vita2d_font_get_dimensions(self, size, text, w, h)
-      return w[0], h[0]
+      --w = ffi.new("int[1]")
+      --h = ffi.new("int[1]")
+      --ffi.C.vita2d_font_get_dimensions(self, size, text, w, h)
+      --return w[0], h[0]
+      return ffi.C.vita2d_font_text_width(self, size, text), ffi.C.vita2d_font_text_height(self, size, text)
     end,
     text_width = ffi.C.vita2d_font_text_width,
     text_height = ffi.C.vita2d_font_text_height,

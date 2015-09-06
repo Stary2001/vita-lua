@@ -27,6 +27,31 @@ function os.exit(r)
   ffi.C.sceKernelExitProcess(r)
 end
 
+-- from http://stackoverflow.com/questions/28664139/lua-split-string-into-words-unless-quoted
+function os.shellparse(text)
+  local res = {}
+  local spat, epat, buf, quoted = [=[^(['"])]=], [=[(['"])$]=]
+  for str in text:gmatch("%S+") do
+    local squoted = str:match(spat)
+    local equoted = str:match(epat)
+    local escaped = str:match([=[(\*)['"]$]=])
+    if squoted and not quoted and not equoted then
+      buf, quoted = str, squoted
+    elseif buf and equoted == quoted and #escaped % 2 == 0 then
+      str, buf, quoted = buf .. ' ' .. str, nil, nil
+    elseif buf then
+      buf = buf .. ' ' .. str
+    end
+    if not buf then
+      table.insert(res, (str:gsub(spat,""):gsub(epat,"")))
+    end
+  end
+  if buf then
+    return false, "Missing matching quote for "..buf
+  end
+  return true, res
+end
+
 -- from http://lua-users.org/wiki/SimpleRound
 function math.round(num, idp)
   local mult = 10^(idp or 0)
@@ -41,6 +66,16 @@ function string.lines(str)
   return t
 end
 
+-- String padding
+function string.lpad(str, len, chr)
+  local char = chr or " "
+  return str .. string.rep(char, len - #str)
+end
+function string.rpad(str, len, chr)
+  local char = chr or " "
+  return string.rep(char, len - #str) .. str
+end
+
 -- Table find
 function table.find(t, val)
   for k,v in pairs(t) do
@@ -50,13 +85,22 @@ function table.find(t, val)
   end
 end
 
-
--- String padding
-function string.lpad(str, len, chr)
-  local char = chr or " "
-  return str .. string.rep(char, len - #str)
+-- Small table helpers.
+function table.keys(t)
+  local res = {}
+  for k in pairs(t) do
+    table.insert(res, k)
+  end
+  return res
 end
-function string.rpad(str, len, chr)
-  local char = chr or " "
-  return string.rep(char, len - #str) .. str
+function table.iterate(t, f)
+  for k, v in pairs(t) do
+    f(k, v)
+  end
+end
+function table.map(t, f)
+  local rest = {}
+  for k, v in pairs(t) do
+    rest[k] = f(k, v)
+  end
 end
