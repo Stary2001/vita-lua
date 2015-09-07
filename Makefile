@@ -13,7 +13,7 @@ LIBS = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSceDisp
 INCLUDES = -I$(VITASDK)/arm-vita-eabi/include/luajit-2.0
 
 PREFIX = $(VITASDK)/bin/arm-vita-eabi
-DB = db.json
+DB = db.json extra.json
 
 CC      = $(PREFIX)-gcc
 LD	= $(PREFIX)-ld
