@@ -16,8 +16,6 @@ void ffi_register_vita2d()
 		{"vita2d_set_clear_color", vita2d_set_clear_color},
 		{"vita2d_set_vblank_wait", vita2d_set_vblank_wait},
 		{"vita2d_get_current_fb", vita2d_get_current_fb},
-		{"vita2d_set_clip", vita2d_set_clip},
-		{"vita2d_reset_clip", vita2d_reset_clip},
 		{"vita2d_pool_malloc", vita2d_pool_malloc},
 		{"vita2d_pool_memalign", vita2d_pool_memalign},
 		{"vita2d_pool_free_space", vita2d_pool_free_space},
