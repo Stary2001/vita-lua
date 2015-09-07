@@ -123,13 +123,13 @@ local req_mt =
   }
 }
 
-function http.init()
-  C.sceHttpInit(100)
+--[[function http.init()
+  return C.sceHttpInit(100)
 end
 
 function http.term()
-  C.sceHttpTerm()
-end
+  return C.sceHttpTerm()
+end]]
 
 function http.request(meth, url, post_data)
   if meth == "get" then

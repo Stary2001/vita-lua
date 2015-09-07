@@ -1,10 +1,11 @@
-local url = "http://stary2001.co.uk/lua/boot.lua"
-
-http.init()
+local url = "http://192.168.0.13/code.lua"
 
 function exec(url)
   local status, req = http.get(url)
-  if req == nil then return end
+  if status == nil then
+    print("HTTP error: " .. tostring(req))
+    return
+  end
   local code = req:read("*a")
   req:close()
 
@@ -14,6 +15,7 @@ function exec(url)
     print("Error: "..err)
     return
   end
+
   local success, err = pcall(func)
   if not success then
     print("Error: "..err)
@@ -21,5 +23,3 @@ function exec(url)
 end
 
 exec(url)
-
-http.term()

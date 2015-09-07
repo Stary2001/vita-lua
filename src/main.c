@@ -7,6 +7,7 @@
 #include <string.h>
 #include <psp2/kernel/processmgr.h>
 #include <psp2/kernel/threadmgr.h>
+#include <psp2/net/http.h>
 #include <debugnet.h>
 #include <vita2d.h>
 
@@ -37,6 +38,7 @@ int main()
 
 	vita2d_init();
 	PHYSFS_init(NULL);
+	sceHttpInit(100);
 
 	luaL_openlibs(lua);
 	open_ffi(lua);
@@ -63,6 +65,7 @@ int main()
 		lua_pop(lua, 1);
 	}
 
+	sceHttpTerm();
 	PHYSFS_deinit();
 	vita2d_fini();
 
