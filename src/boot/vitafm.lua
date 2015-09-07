@@ -1,11 +1,11 @@
--- boot_ui
+-- vitafm
 -- Loads up ui.choose_file and applies magic.
-local physfsroot = "cache0:/"
+local physfsroot = "cache0:"
 local dir = "/VitaDefilerClient/Documents"
 local binpath = "/bin"
 local confpath = "/VitaDefilerClient/Documents/vitafm.cfg"
 
-physfs.mount(physfsroot)
+physfs.mount(physfsroot.."/")
 
 vitafm = {}
 
@@ -60,7 +60,8 @@ function vitafm.viewer(file)
     f:close()
     ui.pager(data, file, true)
   else
-    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    --ui.error("viewer: Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    error("File ''" .. file .. "' could not be opened.")
   end
 end
 
@@ -73,17 +74,20 @@ function vitafm.lua(file)
     local fn, err = loadstring(data)
     if err ~= nil then
       print("File manager: Lua syntax error: "..tostring(err))
-      ui.error("Lua Syntax Error", "Error:\n" .. tostring(err))
+      --ui.error("lua: Syntax Error", "Error:\n" .. tostring(err))
+      error(tostring(err))
       return
     end
     local success, err = pcall(fn)
     if not success then
       print("File manager: Lua script error: "..tostring(err))
-      ui.error("Lua Script Error", "Error:\n" .. tostring(err))
+      --ui.error("lua: Script Error", "Error:\n" .. tostring(err))
+      error(tostring(err))
       return
     end
   else
-    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    --ui.error("lua: Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    error("File ''" .. file .. "' could not be opened.")
   end
 end
 
@@ -102,7 +106,8 @@ function vitafm.imgview(file, ext)
     local image = vita2d.load_texture_data(ext:gsub("%.", ""), data)
     ui.view_image(image)
   else
-    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    --ui.error("imgview: Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    error("File ''" .. file .. "' could not be opened.")
   end
 end
 
@@ -113,12 +118,23 @@ function vitafm.font(file)
     f:close()
     font = vita2d.load_font_data(data)
   else
-    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    --ui.error("font: Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    error("File ''" .. file .. "' could not be opened.")
   end
 end
 
 function vitafm.mount(file)
-  physfs.mount(physfsroot .. file)
+  --if not fs.is_file(file) then
+  --  error("No such file: "..file)
+  --end
+  return physfs.mount(file)
+end
+
+function vitafm.uvloader(file)
+  --if not fs.exists(file) then
+  --  error("No such file: "..file)
+  --end
+  return uvl.load(file)
 end
 
 -- types
@@ -137,7 +153,10 @@ local types = {
   [".ttf"] = "font %f",
 
   -- Physfs archives.
-  [".zip"] = "mount %f",
+  [".zip"] = "mount %F",
+
+  -- Vita Homebrew
+  [".velf"] = "uvloader %F",
 
   -- Ask for handler
   ["*"] = "ask %f %e"
@@ -150,7 +169,8 @@ vitafm.programs = {
   ["lua"] = vitafm.lua,
   ["mount"] = vitafm.mount,
   ["imgview"] = vitafm.imgview,
-  ["font"] = vitafm.font
+  ["font"] = vitafm.font,
+  ["uvloader"] = vitafm.uvloader,
 }
 local function add_programs(path)
   local dir = physfs.list(path)
@@ -205,12 +225,19 @@ function vitafm.run_shell(command, vars)
     end
     args[k] = val
   end
-  return vitafm.exec(prog, unpack(args))
+  local succ, ret = pcall(vitafm.exec, prog, unpack(args))
+  if not succ then
+    print("Program "..prog.." errored: "..ret)
+    ui.error("Error in program "..prog, ret)
+  else
+    return ret
+  end
 end
 
 function vitafm.call_prog(command, file, ext)
   return vitafm.run_shell(command, {
     ["%%f"] = file,
+    ["%%F"] = physfsroot..file,
     ["%%e"] = ext
   })
 end
