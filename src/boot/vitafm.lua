@@ -131,10 +131,15 @@ function vitafm.mount(file)
 end
 
 function vitafm.uvloader(file)
-  --if not fs.exists(file) then
-  --  error("No such file: "..file)
-  --end
-  return uvl.load(file)
+  vita2d.fini() -- Deinitialize vita2d, so that graphics aren't messed up.
+
+  local status = uvl.load(file)
+
+  os.sleep(0.5) -- Take our time, so that we don't accidentally select a bad thing.
+  vita2d.init() -- Initialize that thing again.
+  vita2d.clear_screen()
+  os.sleep(0.5)
+  return status
 end
 
 -- types
@@ -332,7 +337,7 @@ while true do
           return vitafm.exec(prog)
         end
       elseif res == "Exit VitaFM" then
-        os.exit(0)
+        uvl.exit(0)
       end
       return true, nil
     end

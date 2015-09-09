@@ -18,6 +18,9 @@ function uvl.load(str)
 end
 
 function uvl.exit(status)
+  vita2d.fini() -- Some cleanup.
+  physfs.deinit()
+
   ffi.C.uvl_exit(status)
 end
 
