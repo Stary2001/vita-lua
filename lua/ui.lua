@@ -150,32 +150,36 @@ function ui.pager(text, title, displaylinenos, line, selectedcolor, normalcolor,
   end
 
   local lines = {}
-  if not string.find(text, "\n$") then
-    text = text.."\n"
-  end
-  local tmp_lines = string.lines(text)
-  local count = #tmp_lines
-  local numwidth = #(tostring(count))
+  if type(text) == "string" then
+    if not string.find(text, "\n$") then
+      text = text.."\n"
+    end
+    local tmp_lines = string.lines(text)
+    local count = #tmp_lines
+    local numwidth = #(tostring(count))
 
-  local maxlength = 62 - numwidth
+    local maxlength = 62 - numwidth
 
-  for n, line in pairs(tmp_lines) do
-    local i = 0
-    for s in line:gmatch((".?"):rep(maxlength)) do
-      i = i + 1
-      if displaylinenos then
-        if i == 1 then
-          local padded = string.rpad(tostring(n), numwidth)
-          table.insert(lines, padded.."| ".. s)
-        else
-          if s and s ~= "" then
-            table.insert(lines, string.rep(" ", numwidth).."| ".. s)
+    for n, line in pairs(tmp_lines) do
+      local i = 0
+      for s in line:gmatch((".?"):rep(maxlength)) do
+        i = i + 1
+        if displaylinenos then
+          if i == 1 then
+            local padded = string.rpad(tostring(n), numwidth)
+            table.insert(lines, padded.."| ".. s)
+          else
+            if s and s ~= "" then
+              table.insert(lines, string.rep(" ", numwidth).."| ".. s)
+            end
           end
+        else
+          table.insert(lines, s)
         end
-      else
-        table.insert(lines, s)
       end
     end
+  elseif type(text) == "table" then
+    lines = text
   end
 
   while true do

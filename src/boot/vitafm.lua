@@ -29,20 +29,21 @@ local function config_parse(file)
         subsect = s
         c[s] = c[s] or {}
       else
+        local t = subsect and c[subsect] or c
         local k, v = line:match("^(.-)%s-=%s-(.+)$")
         if k and v then
           local nv = tonumber(v)
           if v == "true" then
-            c[subsect][k] = true
+            t[k] = true
           elseif v == "false" then
-            c[subsect][k] = false
+            t[k] = false
           elseif nv ~= nil then
-            c[subsect][k] = nv
+            t[k] = nv
           else
-            c[subsect][k] = v
+            t[k] = v
           end
         elseif line ~= "" then
-          table.insert(c[subsect], line)
+          table.insert(t, line)
         end
       end
     end
@@ -310,7 +311,11 @@ local function parse_config(path)
     print("Not found.")
   end
 end
-parse_config(confpath)
+
+local pad = input.peek()
+if not (pad:l_trigger() and pad:r_trigger()) then
+  parse_config(confpath)
+end
 
 -- Main loop.
 local selected
@@ -334,7 +339,13 @@ while true do
       if res == "Run Program" then
         prog = ui.choose(table.keys(vitafm.programs), "Open Program...")
         if prog then
-          return vitafm.exec(prog)
+          local succ, ret = pcall(vitafm.exec, prog)
+          if not succ then
+            print("Program "..prog.." errored: "..ret)
+            ui.error("Error in program "..prog, ret)
+          else
+            return ret
+          end
         end
       elseif res == "Exit VitaFM" then
         uvl.exit(0)
