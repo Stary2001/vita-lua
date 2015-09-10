@@ -3,6 +3,7 @@
 #include <psp2/kernel/threadmgr.h>
 #include <psp2/kernel/processmgr.h>
 #include <zlib.h>
+#include <stdlib.h>
 
 void ffi_register_misc()
 {
@@ -12,6 +13,8 @@ void ffi_register_misc()
 		{"sceKernelGetProcessTime", sceKernelGetProcessTime},
 		{"sceKernelExitProcess", sceKernelExitProcess},
 		{"crc32", crc32},
+		{"malloc", malloc},
+		{"free", free},
 		{NULL, NULL}
 	};
 	static FunctionTable table = { .funcs = funcs, .next = NULL };
