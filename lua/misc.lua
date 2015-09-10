@@ -23,9 +23,9 @@ function os.clock()
   return tonumber(c[0]) / 1000000
 end
 
-function os.exit(r)
-  ffi.C.sceKernelExitProcess(r)
-end
+--function os.exit(r)
+--  ffi.C.sceKernelExitProcess(r)
+--end
 
 -- from http://stackoverflow.com/questions/28664139/lua-split-string-into-words-unless-quoted
 function os.shellparse(text)

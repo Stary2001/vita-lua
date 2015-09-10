@@ -69,6 +69,10 @@ int main()
 	PHYSFS_deinit();
 	vita2d_fini();
 
+#ifdef uvl_exit
+	uvl_exit(0)
+#else
 	sceKernelExitProcess(0);
+#endif
 	return 0;
 }

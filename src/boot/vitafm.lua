@@ -1,11 +1,11 @@
--- boot_ui
+-- vitafm
 -- Loads up ui.choose_file and applies magic.
-local physfsroot = "cache0:/"
+local physfsroot = "cache0:"
 local dir = "/VitaDefilerClient/Documents"
 local binpath = "/bin"
 local confpath = "/VitaDefilerClient/Documents/vitafm.cfg"
 
-physfs.mount(physfsroot)
+physfs.mount(physfsroot.."/")
 
 vitafm = {}
 
@@ -29,20 +29,21 @@ local function config_parse(file)
         subsect = s
         c[s] = c[s] or {}
       else
+        local t = subsect and c[subsect] or c
         local k, v = line:match("^(.-)%s-=%s-(.+)$")
         if k and v then
           local nv = tonumber(v)
           if v == "true" then
-            c[subsect][k] = true
+            t[k] = true
           elseif v == "false" then
-            c[subsect][k] = false
+            t[k] = false
           elseif nv ~= nil then
-            c[subsect][k] = nv
+            t[k] = nv
           else
-            c[subsect][k] = v
+            t[k] = v
           end
         elseif line ~= "" then
-          table.insert(c[subsect], line)
+          table.insert(t, line)
         end
       end
     end
@@ -60,7 +61,8 @@ function vitafm.viewer(file)
     f:close()
     ui.pager(data, file, true)
   else
-    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    --ui.error("viewer: Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    error("File ''" .. file .. "' could not be opened.")
   end
 end
 
@@ -73,17 +75,20 @@ function vitafm.lua(file)
     local fn, err = loadstring(data)
     if err ~= nil then
       print("File manager: Lua syntax error: "..tostring(err))
-      ui.error("Lua Syntax Error", "Error:\n" .. tostring(err))
+      --ui.error("lua: Syntax Error", "Error:\n" .. tostring(err))
+      error(tostring(err))
       return
     end
     local success, err = pcall(fn)
     if not success then
       print("File manager: Lua script error: "..tostring(err))
-      ui.error("Lua Script Error", "Error:\n" .. tostring(err))
+      --ui.error("lua: Script Error", "Error:\n" .. tostring(err))
+      error(tostring(err))
       return
     end
   else
-    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    --ui.error("lua: Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    error("File ''" .. file .. "' could not be opened.")
   end
 end
 
@@ -102,7 +107,8 @@ function vitafm.imgview(file, ext)
     local image = vita2d.load_texture_data(ext:gsub("%.", ""), data)
     ui.view_image(image)
   else
-    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    --ui.error("imgview: Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    error("File ''" .. file .. "' could not be opened.")
   end
 end
 
@@ -113,12 +119,28 @@ function vitafm.font(file)
     f:close()
     font = vita2d.load_font_data(data)
   else
-    ui.error("Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    --ui.error("font: Couldn't open File", "Error:\nFile ''" .. file .. "' could not be opened.")
+    error("File ''" .. file .. "' could not be opened.")
   end
 end
 
 function vitafm.mount(file)
-  physfs.mount(physfsroot .. file)
+  --if not fs.is_file(file) then
+  --  error("No such file: "..file)
+  --end
+  return physfs.mount(file)
+end
+
+function vitafm.uvloader(file)
+  vita2d.fini() -- Deinitialize vita2d, so that graphics aren't messed up.
+
+  local status = uvl.load(file)
+
+  os.sleep(0.5) -- Take our time, so that we don't accidentally select a bad thing.
+  vita2d.init() -- Initialize that thing again.
+  vita2d.clear_screen()
+  os.sleep(0.5)
+  return status
 end
 
 -- types
@@ -137,7 +159,10 @@ local types = {
   [".ttf"] = "font %f",
 
   -- Physfs archives.
-  [".zip"] = "mount %f",
+  [".zip"] = "mount %F",
+
+  -- Vita Homebrew
+  [".velf"] = "uvloader %F",
 
   -- Ask for handler
   ["*"] = "ask %f %e"
@@ -150,7 +175,8 @@ vitafm.programs = {
   ["lua"] = vitafm.lua,
   ["mount"] = vitafm.mount,
   ["imgview"] = vitafm.imgview,
-  ["font"] = vitafm.font
+  ["font"] = vitafm.font,
+  ["uvloader"] = vitafm.uvloader,
 }
 local function add_programs(path)
   local dir = physfs.list(path)
@@ -205,12 +231,19 @@ function vitafm.run_shell(command, vars)
     end
     args[k] = val
   end
-  return vitafm.exec(prog, unpack(args))
+  local succ, ret = pcall(vitafm.exec, prog, unpack(args))
+  if not succ then
+    print("Program "..prog.." errored: "..ret)
+    ui.error("Error in program "..prog, ret)
+  else
+    return ret
+  end
 end
 
 function vitafm.call_prog(command, file, ext)
   return vitafm.run_shell(command, {
     ["%%f"] = file,
+    ["%%F"] = physfsroot..file,
     ["%%e"] = ext
   })
 end
@@ -278,7 +311,11 @@ local function parse_config(path)
     print("Not found.")
   end
 end
-parse_config(confpath)
+
+local pad = input.peek()
+if not (pad:l_trigger() and pad:r_trigger()) then
+  parse_config(confpath)
+end
 
 -- Main loop.
 local selected
@@ -302,10 +339,16 @@ while true do
       if res == "Run Program" then
         prog = ui.choose(table.keys(vitafm.programs), "Open Program...")
         if prog then
-          return vitafm.exec(prog)
+          local succ, ret = pcall(vitafm.exec, prog)
+          if not succ then
+            print("Program "..prog.." errored: "..ret)
+            ui.error("Error in program "..prog, ret)
+          else
+            return ret
+          end
         end
       elseif res == "Exit VitaFM" then
-        os.exit(0)
+        uvl.exit(0)
       end
       return true, nil
     end

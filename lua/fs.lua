@@ -141,13 +141,30 @@ function fs.rmdir(path)
   ffi.C.sceIoRmdir(path)
 end
 
-function fs.isdir(path)
+function fs.is_dir(path)
   local stat = ffi.new("SceIoStat[1]")
   if ffi.C.sceIoGetstat(path, stat) < 0 then
     return nil
   end
   return bit.band(stat[0].st_mode, ffi.C.PSP2_SO_IFMT) == ffi.C.PSP2_SO_IFDIR
 end
+
+function fs.is_file(path)
+  local stat = ffi.new("SceIoStat[1]")
+  if ffi.C.sceIoGetstat(path, stat) < 0 then
+    return nil
+  end
+  return bit.band(stat[0].st_mode, ffi.C.PSP2_SO_IFMT) == ffi.C.PSP2_SO_IFREG
+end
+
+function fs.is_link(path)
+  local stat = ffi.new("SceIoStat[1]")
+  if ffi.C.sceIoGetstat(path, stat) < 0 then
+    return nil
+  end
+  return bit.band(stat[0].st_mode, ffi.C.PSP2_SO_IFMT) == ffi.C.PSP2_SO_IFLNK
+end
+
 
 function fs.chdir(path)
   if path == nil then
