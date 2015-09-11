@@ -55,6 +55,8 @@ local function get_port(port)
     return ffi.C.PSP2_AUDIO_OUT_PORT_TYPE_BGM
   elseif port == "voice" then
     return ffi.C.PSP2_AUDIO_OUT_PORT_TYPE_VOICE
+  else
+    error("Invalid audio port name!")
   end
 end
 

@@ -13,15 +13,15 @@ int uvl_log_write(const void* buffer, unsigned int size);
 
 uvl = {}
 
-function uvl.load(str)
-  return ffi.C.uvl_load(str) == 0
+function uvl.load(path)
+  return ffi.C.uvl_load(path) == 0
 end
 
 function uvl.exit(status)
   vita2d.fini() -- Some cleanup.
   physfs.deinit()
 
-  ffi.C.uvl_exit(status)
+  ffi.C.uvl_exit(tonumber(status))
 end
 
 os.exit = uvl.exit -- Alias it to os.exit

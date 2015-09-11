@@ -103,4 +103,5 @@ function table.map(t, f)
   for k, v in pairs(t) do
     rest[k] = f(k, v)
   end
+  return rest
 end

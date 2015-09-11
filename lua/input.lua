@@ -146,7 +146,7 @@ function input.read(mode)
 end
 
 function input.is_pressed(button)
-  pad = input.peek()
+  local pad = input.peek()
   if bit.band(button, pad.buttons) ~= 0 then
     return true
   else return false end

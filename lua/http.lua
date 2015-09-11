@@ -132,11 +132,13 @@ function http.term()
 end]]
 
 function http.request(meth, url, post_data)
-  if meth == "get" then
+  if meth == "GET" then
     meth = C.PSP2_HTTP_METHOD_GET
-  elseif meth == "post" then
+  elseif meth == "POST" then
     meth = C.PSP2_HTTP_METHOD_POST
-  else return end
+  else
+    error("No such method.")
+  end
 
   if template == nil then
     template = C.sceHttpCreateTemplate("VitaLua", C.PSP2_HTTP_VERSION_1_1, 0)
@@ -170,9 +172,9 @@ function http.request(meth, url, post_data)
 end
 
 function http.get(url)
-  return http.request("get", url, nil)
+  return http.request("GET", url)
 end
 
 function http.post(url, post_data)
-  return http.request("post", url, post_data)
+  return http.request("POST", url, post_data)
 end
