@@ -1,6 +1,6 @@
 TARGET = vita-lua
 
-BOOTSCRIPT ?= src/boot/vitafm.lua
+BOOTSCRIPT ?= vitafm
 FONT ?= src/font/UbuntuMono-R.ttf
 
 FFI_BINDINGS = $(wildcard src/ffi/*.c)
@@ -33,8 +33,16 @@ all: $(TARGET).velf
 %.c: %.lua
 	./scripts/generate_init.sh $<
 
-src/boot.c: $(BOOTSCRIPT)
-	./scripts/generate_bootc.sh $<
+src/boot.c:
+	if [ "$(BOOTSCRIPT)" == "vitafm" ]; then \
+		git clone https://github.com/vifino/vitafm src/vitafm || true; \
+		(cd src/vitafm; git pull); \
+		make -C src/vitafm; \
+		./scripts/generate_bootc.sh src/vitafm/vitafm.lua; \
+	else \
+		./scripts/generate_bootc.sh $(BOOTSCRIPT); \
+	fi
+
 
 src/font.c: $(FONT)
 	./scripts/generate_defaultfont.sh $<
@@ -46,4 +54,5 @@ $(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/font.o s
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 clean:
-	@rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) $(FFI_GLUE_O) $(FFI_GLUE_C) src/ffi_init.c src/boot.c
+	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) $(FFI_GLUE_O) $(FFI_GLUE_C) src/ffi_init.c src/boot.c
+	make -C src/vitafm clean

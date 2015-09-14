@@ -6,9 +6,12 @@ lua/*.o
 *.velf
 
 # Generated source
-src/ffi_init.c
-src/boot.c
-src/font.c
+/src/ffi_init.c
+/src/boot.c
+/src/font.c
+
+# VitaFM Source
+/src/vitafm
 
 # Vim Files
 *.un~
