@@ -35,8 +35,6 @@ all: $(TARGET).velf
 
 src/boot.c:
 	if [ "$(BOOTSCRIPT)" == "vitafm" ]; then \
-		git clone https://github.com/vifino/vitafm src/vitafm || true; \
-		(cd src/vitafm; git pull); \
 		make -C src/vitafm; \
 		./scripts/generate_bootc.sh src/vitafm/vitafm.lua; \
 	else \

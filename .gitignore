@@ -10,8 +10,8 @@ lua/*.o
 /src/boot.c
 /src/font.c
 
-# VitaFM Source
-/src/vitafm
+# VitaFM
+/src/vitafm/vitafm.lua
 
 # Vim Files
 *.un~
