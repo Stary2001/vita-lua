@@ -2,6 +2,7 @@ TARGET = vita-lua
 
 BOOTSCRIPT ?= vitafm
 FONT ?= src/font/UbuntuMono-R.ttf
+MINIFY ?= no
 
 FFI_BINDINGS = $(wildcard src/ffi/*.c)
 FFI_GLUE     = $(wildcard lua/*.lua)
@@ -31,12 +32,23 @@ all: $(TARGET).velf
 	vita-elf-create $< $@ $(DB) >/dev/null
 
 %.c: %.lua
-	./scripts/generate_init.sh $<
+	if [ "$(MINIFY)" == "yes" ]; then \
+		luamin $< > $<_min; \
+		./scripts/generate_init.sh $<_min $*.c; \
+		rm $<_min; \
+	else \
+		./scripts/generate_init.sh $< $*.c; \
+	fi
 
 src/boot.c:
-	if [ "$(BOOTSCRIPT)" == "vitafm" ]; then \
-		make -C src/vitafm; \
-		./scripts/generate_bootc.sh src/vitafm/vitafm.lua; \
+	@if [ "$(BOOTSCRIPT)" == "vitafm" ]; then \
+		if [ "$(MINIFY)" == "YES" ]; then \
+			make -C src/vitafm min; \
+			./scripts/generate_bootc.sh src/vitafm/vitafm_min.lua; \
+		else \
+			make -C src/vitafm; \
+			./scripts/generate_bootc.sh src/vitafm/vitafm.lua; \
+		fi \
 	else \
 		./scripts/generate_bootc.sh $(BOOTSCRIPT); \
 	fi
