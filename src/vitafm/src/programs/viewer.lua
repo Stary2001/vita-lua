@@ -1,3 +1,4 @@
+-- viewer.lua
 local args = {...}
 local f = physfs.open(args[1])
 if f ~= nil then

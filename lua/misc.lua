@@ -28,7 +28,7 @@ end
 --end
 
 -- from http://stackoverflow.com/questions/28664139/lua-split-string-into-words-unless-quoted
-function os.shellparse(text)
+function os.shelltokenize(text)
   local res = {}
   local spat, epat, buf, quoted = [=[^(['"])]=], [=[(['"])$]=]
   for str in text:gmatch("%S+") do

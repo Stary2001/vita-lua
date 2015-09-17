@@ -32,11 +32,15 @@ all: $(TARGET).velf
 	vita-elf-create $< $@ $(DB) >/dev/null
 
 %.c: %.lua
-	if [ "$(MINIFY)" == "yes" ]; then \
+	@if [ "$(MINIFY)" == "yes" ]; then \
+		echo luamin $< > $<_min; \
 		luamin $< > $<_min; \
+		echo ./scripts/generate_init.sh $<_min $*.c; \
 		./scripts/generate_init.sh $<_min $*.c; \
+		echo rm $<_min; \
 		rm $<_min; \
 	else \
+		echo ./scripts/generate_init.sh $< $*.c; \
 		./scripts/generate_init.sh $< $*.c; \
 	fi
 
@@ -44,12 +48,15 @@ src/boot.c:
 	@if [ "$(BOOTSCRIPT)" == "vitafm" ]; then \
 		if [ "$(MINIFY)" == "YES" ]; then \
 			make -C src/vitafm min; \
+			echo ./scripts/generate_bootc.sh src/vitafm/vitafm_min.lua; \
 			./scripts/generate_bootc.sh src/vitafm/vitafm_min.lua; \
 		else \
 			make -C src/vitafm; \
+			echo ./scripts/generate_bootc.sh src/vitafm/vitafm.lua; \
 			./scripts/generate_bootc.sh src/vitafm/vitafm.lua; \
 		fi \
 	else \
+		echo ./scripts/generate_bootc.sh $(BOOTSCRIPT); \
 		./scripts/generate_bootc.sh $(BOOTSCRIPT); \
 	fi
 

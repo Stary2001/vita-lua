@@ -1,3 +1,4 @@
+-- imgview.lua
 local args = {...}
 local ext = file_extension(args[1])
 if ext == nil then

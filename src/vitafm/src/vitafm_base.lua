@@ -80,7 +80,7 @@ function vitafm.lua(file)
 	end
 end
 
--- vitafm.types
+-- Types
 vitafm.types = {
 	[".lua"] = "lua %f"
 }
@@ -89,7 +89,11 @@ vitafm.types = {
 vitafm.programs = {
 	["lua"] = vitafm.lua
 }
-local function add_programs(path)
+
+-- Aliases
+vitafm.aliases = {}
+
+function vitafm.add_programs(path)
 	local dir = physfs.list(path)
 	for k, v in pairs(dir) do
 		if v:find("%.lua$") then
@@ -105,53 +109,131 @@ local function add_programs(path)
 					vitafm.programs[v:gsub("%.lua$", "")] = fn
 				end
 			end
+		elseif v:find("%.vsh$") then
+			local filepath = path.."/"..v
+			local f = physfs.open(filepath)
+			if f ~= nil then
+				local data = f:read("*a")
+				f:close()
+				local succ, err = vitafm.parsecommands(data, {}, true)
+				if not succ then
+					print("File manager: vsh script syntax error: "..tostring(err))
+				else
+					vitafm.programs[v:gsub("%.vsh$", "")] = data
+				end
+			end
 		end
 	end
 end
 
-function vitafm.exec(prog, ...) -- Global, so other vitafm.programs that get loaded by this can run others.
-	return vitafm.programs[prog](...)
+function vitafm.exec(prog, ...)
+	local f = vitafm.programs[prog]
+	if type(f) == "function" then
+		f(...)
+	elseif type(f) == "string" then
+		vitafm.run_shell(f, {}, {...})
+	elseif f == nil then
+		error("No such program.")
+	else
+		error("No such program: "..prog)
+	end
+end
+function vitafm.exec_vars(prog, vars, ...)
+	local f = vitafm.programs[prog]
+	if type(f) == "function" then
+		f(...)
+	elseif type(f) == "string" then
+		vitafm.run_shell(f, vars, {...})
+	elseif f == nil then
+		error("No such program.")
+	else
+		error("No such program: "..prog)
+	end
 end
 
-function vitafm.run_shell(command, vars)
-	local succ, split = os.shellparse(command)
+-- The tokenizer/backtick parser
+function vitafm.parsecommands(text, vars, dryparse)
+	local dryparse = dryparse or false
+	local res = {}
+	local spat, epat, buf, quoted = [=[^(['"`])]=], [=[(['"`])$]=]
+	local vars = vars or {}
+	for str in text:gmatch("%S+") do
+		local squoted = str:match(spat)
+		local equoted = str:match(epat)
+		local escaped = str:match([=[(\*)['"`]$]=])
+		if squoted and not quoted and not equoted then
+			buf, quoted = str, squoted
+		elseif buf and equoted == quoted and #escaped % 2 == 0 then
+			str, buf, quoted = buf .. ' ' .. str, nil, nil
+		elseif buf then
+			buf = buf .. ' ' .. str
+		end
+		if not buf then
+			if dryparse then
+				table.insert(res, str:gsub(spat,""):gsub(epat,""))
+			else
+				if quoted == "`" then
+					table.insert(res, vitafm.run_shell(str:gsub(spat,""):gsub(epat,""), vars))
+				else
+					local v = str:gsub(spat,""):gsub(epat,"")
+					local val
+					local nv = tonumber(val)
+					if v == "true" then
+						val = true
+					elseif v == "false" then
+						val = false
+					elseif nv ~= nil then
+						val = nv
+					else
+						local tmp = v
+						for varname, replacement in pairs(vars) do
+							--tmp = tmp:gsub(varname:gsub("%%", "%%%1"), replacement)
+							tmp = tmp:gsub(varname, replacement)
+						end
+						val = tmp
+					end
+					table.insert(res, val)
+				end
+			end
+		end
+	end
+	if buf then
+		return false, "Missing matching quote for "..buf
+	end
+	return true, res
+end
+
+function vitafm.run_shell(command, vars, appendedargs)
+	local vars = vars or {}
+	local succ, args = vitafm.parsecommands(command, vars)
 	if not succ then
 		ui.error("Command Parser Error", "Error:\n" .. split)
 		return
 	end
-	local prog = split[1]
-	table.remove(split, 1)
-
-	local args = {}
-	for k, v in pairs(split) do
-		local val
-		local nv = tonumber(val)
-		if v == "true" then
-			val = true
-		elseif v == "false" then
-			val = false
-		elseif nv ~= nil then
-			val = nv
-		else
-			local tmp = v
-			for varname, replacement in pairs(vars) do
-				--tmp = tmp:gsub(varname:gsub("%%", "%%%1"), replacement)
-				tmp = tmp:gsub(varname, replacement)
-			end
-			val = tmp
+	if appendedargs then
+		for k, v in pairs(appendedargs) do
+			table.insert(args, v)
 		end
-		args[k] = val
 	end
-	local succ, ret = pcall(vitafm.exec, prog, unpack(args))
-	if not succ then
-		print("Program "..prog.." errored: "..ret)
-		ui.error("Error in program "..prog, ret)
+	local prog = args[1]
+	table.remove(args, 1)
+
+	if vitafm.programs[prog] then
+		local succ, ret = pcall(vitafm.exec_vars, prog, vars, unpack(args))
+		if not succ then
+			print("Program "..prog.." errored: "..ret)
+			ui.error("Error in program "..prog, ret)
+		else
+			return ret
+		end
+	elseif vitafm.aliases[prog] then
+		return vitafm.run_shell(vitafm.aliases[prog].. " ".. command, vars, args)
 	else
-		return ret
+		error("No such program.")
 	end
 end
 
-function vitafm.call_prog(command, file, ext)
+local function call_prog(command, file, ext)
 	return vitafm.run_shell(command, {
 		["%%f"] = file,
 		["%%F"] = physfsroot..file,
@@ -190,11 +272,11 @@ function vitafm.ask(file, ext)
 			elseif opt == "Open with..." then
 				prog = ui.choose(table.keys(vitafm.programs), "Open with...")
 				if prog then
-					return vitafm.call_prog(prog.." %f", file)
+					return call_prog(prog.." %f", file)
 				end
 				return
 			elseif vitafm.types[res] then
-				return vitafm.call_prog(vitafm.types[res], file, res)
+				return call_prog(vitafm.types[res], file, res)
 			end
 		else
 			return
@@ -212,6 +294,9 @@ local function parse_config(path)
 		if type(conf.filetypes) == "table" then
 			vitafm.types = conf.filetypes
 		end
+		if type(conf.aliases) == "table" then
+			vitafm.aliases = conf.aliases
+		end
 		if type(conf.mount) == "table" then
 			for k, v in pairs(conf.mount) do
 				physfs.mount(v)
@@ -224,7 +309,7 @@ local function parse_config(path)
 end
 
 local pad = input.peek()
-if not (pad:l_trigger() and pad:r_trigger()) then
+if not (pad:l_trigger() or pad:r_trigger()) then
 	parse_config(confpath)
 end
 
@@ -233,7 +318,7 @@ function vitafm.run()
 	local selected
 	while true do
 		if physfs.is_dir(binpath) then
-			add_programs(binpath)
+			vitafm.add_programs(binpath)
 		end
 		file, dir, selected = ui.choose_file(dir, nil, selected, (function(sel, old_pad, pad, path)
 			if old_pad:triangle() and not pad:triangle() then -- "Open as" menu
@@ -268,9 +353,9 @@ function vitafm.run()
 		if file ~= nil then
 			local ext = file_extension(file)
 			if vitafm.types[ext] then
-				vitafm.call_prog(vitafm.types[ext], file, ext)
+				call_prog(vitafm.types[ext], file, ext)
 			elseif vitafm.types["*"] then
-				vitafm.call_prog(vitafm.types["*"], file, ext)
+				call_prog(vitafm.types["*"], file, ext)
 			end
 		end
 	end
