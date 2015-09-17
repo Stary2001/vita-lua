@@ -82,7 +82,8 @@ end
 
 -- Types
 vitafm.types = {
-	[".lua"] = "lua %f"
+	[".lua"] = "lua %f",
+	["*"] = "ask %f %e"
 }
 
 -- "Program" Registration.
@@ -131,7 +132,7 @@ function vitafm.exec(prog, ...)
 	if type(f) == "function" then
 		f(...)
 	elseif type(f) == "string" then
-		vitafm.run_shell(f, {}, {...})
+		vitafm.run_command(f, {}, {...})
 	elseif f == nil then
 		error("No such program.")
 	else
@@ -143,7 +144,7 @@ function vitafm.exec_vars(prog, vars, ...)
 	if type(f) == "function" then
 		f(...)
 	elseif type(f) == "string" then
-		vitafm.run_shell(f, vars, {...})
+		vitafm.run_command(f, vars, {...})
 	elseif f == nil then
 		error("No such program.")
 	else
@@ -203,7 +204,7 @@ function vitafm.parsecommands(text, vars, dryparse)
 	return true, res
 end
 
-function vitafm.run_shell(command, vars, appendedargs)
+function vitafm.run_command(command, vars, appendedargs)
 	local vars = vars or {}
 	local succ, args = vitafm.parsecommands(command, vars)
 	if not succ then
@@ -232,6 +233,20 @@ function vitafm.run_shell(command, vars, appendedargs)
 		error("No such program.")
 	end
 end
+function vitafm.run_shell(code, vars, appendedargs)
+	local res
+	if code then
+		local lines = string.lines(code)
+		local len = #lines
+		for k, line in pairs(lines) do
+			if k == len then
+				res = vitafm.run_command(line, vars, appendedargs)
+			else
+				vitafm.run_command(line, vars)
+			end
+		end
+	end
+end
 
 local function call_prog(command, file, ext)
 	return vitafm.run_shell(command, {
@@ -246,7 +261,7 @@ function vitafm.ask(file, ext)
 	if not string.find(file or "", "^/") then
 		return
 	end
-	local ext = file_extension(file)
+	local ext = ext or file_extension(file)
 	local keys = {}
 	local i = 0
 	local sel = 1
@@ -286,13 +301,15 @@ end
 vitafm.programs["ask"] = vitafm.ask
 
 -- Parse Config
-local function parse_config(path)
+function vitafm.parse_config(path)
 	print("Looking for config...")
 	if physfs.exists(path) then
 		print("Loading config...")
 		local conf = config_parse(path)
 		if type(conf.filetypes) == "table" then
-			vitafm.types = conf.filetypes
+			for k, v in pairs(conf.filetypes) do
+				vitafm.types[k] = v
+			end
 		end
 		if type(conf.aliases) == "table" then
 			vitafm.aliases = conf.aliases
@@ -310,7 +327,7 @@ end
 
 local pad = input.peek()
 if not (pad:l_trigger() or pad:r_trigger()) then
-	parse_config(confpath)
+	vitafm.parse_config(confpath)
 end
 
 -- Main loop.

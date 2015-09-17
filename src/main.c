@@ -25,6 +25,7 @@ int print(lua_State *l)
 }
 
 const char *bootscript_data;
+const char *vitafm_data;
 const char *defaultfont_data;
 unsigned int defaultfont_data_len;
 void open_ffi(lua_State *l);
@@ -50,6 +51,20 @@ int main()
 
 	lua_pushcfunction(lua, print);
 	lua_setglobal(lua, "print");
+
+	if(luaL_loadstring(lua, vitafm_data) == 0)
+	{
+		if(lua_pcall(lua, 0, 0, 0) != 0)
+		{
+			debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
+			lua_pop(lua, 1);
+		}
+	}
+	else
+	{
+		debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
+		lua_pop(lua, 1);
+	}
 
 	if(luaL_loadstring(lua, bootscript_data) == 0)
 	{

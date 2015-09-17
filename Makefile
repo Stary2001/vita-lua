@@ -46,20 +46,23 @@ all: $(TARGET).velf
 
 src/boot.c:
 	@if [ "$(BOOTSCRIPT)" == "vitafm" ]; then \
-		if [ "$(MINIFY)" == "YES" ]; then \
-			make -C src/vitafm min; \
-			echo ./scripts/generate_bootc.sh src/vitafm/vitafm_min.lua; \
-			./scripts/generate_bootc.sh src/vitafm/vitafm_min.lua; \
-		else \
-			make -C src/vitafm; \
-			echo ./scripts/generate_bootc.sh src/vitafm/vitafm.lua; \
-			./scripts/generate_bootc.sh src/vitafm/vitafm.lua; \
-		fi \
+		echo ./scripts/generate_bootc.sh src/vitafm/src/vitafm_launch.lua; \
+		./scripts/generate_bootc.sh src/vitafm/src/vitafm_launch.lua; \
 	else \
 		echo ./scripts/generate_bootc.sh $(BOOTSCRIPT); \
 		./scripts/generate_bootc.sh $(BOOTSCRIPT); \
 	fi
 
+src/vitafm/vitafm.c: src/vitafm/src/vitafm_launch.lua
+	if [ "$(MINIFY)" == "YES" ]; then \
+		make -C src/vitafm min; \
+		echo ./scripts/generate_vitafmc.sh src/vitafm/vitafm_min.lua; \
+		./scripts/generate_vitafmc.sh src/vitafm/vitafm_min.lua; \
+	else \
+		make -C src/vitafm; \
+		echo ./scripts/generate_vitafmc.sh src/vitafm/vitafm.lua; \
+		./scripts/generate_vitafmc.sh src/vitafm/vitafm.lua; \
+	fi
 
 src/font.c: $(FONT)
 	./scripts/generate_defaultfont.sh $<
@@ -67,9 +70,9 @@ src/font.c: $(FONT)
 src/ffi_init.c: $(FFI_GLUE)
 	./scripts/generate_ffi_init_list.sh
 
-$(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/font.o src/boot.o
+$(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/font.o src/boot.o src/vitafm/vitafm.o
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 clean:
-	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) $(FFI_GLUE_O) $(FFI_GLUE_C) src/ffi_init.c src/boot.c
+	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) $(FFI_GLUE_O) $(FFI_GLUE_C) src/ffi_init.c src/boot.c src/vitafm/vitafm.c
 	make -C src/vitafm clean

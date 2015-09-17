@@ -18,7 +18,7 @@ types:
 	cat src/types.lua >> $(OUTPUT)
 
 vitafm: vitafm_base version $(PROGRAMS) types
-	echo "vitafm.run()" >> $(OUTPUT)
+	#echo "vitafm.run()" >> $(OUTPUT)
 
 min: vitafm
 	luamin -f vitafm.lua > vitafm_min.lua

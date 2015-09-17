@@ -1,0 +1,2 @@
+-- VitaFM Launcher
+vitafm.run()
