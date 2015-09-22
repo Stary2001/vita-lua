@@ -58,24 +58,27 @@ int main()
 	lua_setglobal(lua, "print");
 
 	// Display splash
+	unsigned int goal = 2*60;
+	unsigned int counter = 0;
 	vita2d_texture *tex = vita2d_load_PNG_buffer(splash_data);
 	SceCtrlData pad;
 	memset(&pad, 0, sizeof(pad));
 	for (;;) {
+		++counter;
+		if (counter >= goal)
+			break;
 		sceCtrlPeekBufferPositive(0, &pad, 1);
 		if (pad.buttons & PSP2_CTRL_ANY)
 			break;
-
 		vita2d_start_drawing();
 		vita2d_clear_screen();
 		vita2d_draw_texture(tex, 0, 0);
 		vita2d_end_drawing();
 		vita2d_swap_buffers();
 	}
-
-	vita2d_fini();
+	/*vita2d_fini();
 	vita2d_free_texture(tex);
-	vita2d_init();
+	vita2d_init();*/
 
 	if(luaL_loadstring(lua, vitafm_data) == 0)
 	{
@@ -108,6 +111,7 @@ int main()
 	sceHttpTerm();
 	PHYSFS_deinit();
 	vita2d_fini();
+	vita2d_free_texture(tex);
 
 #ifdef uvl_exit
 	uvl_exit(0)
