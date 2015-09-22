@@ -55,7 +55,7 @@ src/boot.c:
 	fi
 
 src/vitafm/vitafm.c: src/vitafm/src/vitafm_launch.lua
-	if [ "$(MINIFY)" == "YES" ]; then \
+	@if [ "$(MINIFY)" == "YES" ]; then \
 		make -C src/vitafm min; \
 		echo ./scripts/generate_vitafmc.sh src/vitafm/vitafm_min.lua; \
 		./scripts/generate_vitafmc.sh src/vitafm/vitafm_min.lua; \
