@@ -2,6 +2,7 @@ TARGET = vita-lua
 
 BOOTSCRIPT ?= vitafm
 FONT ?= src/font/UbuntuMono-R.ttf
+SPLASH ?= src/revitalize_splash.png
 MINIFY ?= no
 
 FFI_BINDINGS = $(wildcard src/ffi/*.c)
@@ -67,12 +68,15 @@ src/vitafm/vitafm.c: src/vitafm/src/vitafm_launch.lua
 src/font.c: $(FONT)
 	./scripts/generate_defaultfont.sh $<
 
+src/splash.c: $(SPLASH)
+	./scripts/generate_splash.sh $<
+
 src/ffi_init.c: $(FFI_GLUE)
 	./scripts/generate_ffi_init_list.sh
 
-$(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/font.o src/boot.o src/vitafm/vitafm.o
+$(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/font.o src/boot.o src/splash.o src/vitafm/vitafm.o
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 clean:
-	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) $(FFI_GLUE_O) $(FFI_GLUE_C) src/ffi_init.c src/boot.c src/vitafm/vitafm.c
+	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) $(FFI_GLUE_O) $(FFI_GLUE_C) src/ffi_init.c src/boot.c src/splash.c src/vitafm/vitafm.c src/vitafm/vitafm.o
 	make -C src/vitafm clean

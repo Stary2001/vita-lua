@@ -9,9 +9,13 @@ lua/*.o
 /src/ffi_init.c
 /src/boot.c
 /src/font.c
+/src/splash.c
 
 # VitaFM
+/src/vitafm/vitafm.c
+/src/vitafm/vitafm.o
 /src/vitafm/vitafm.lua
+/src/vitafm/vitafm_min.lua
 
 # Vim Files
 *.un~
