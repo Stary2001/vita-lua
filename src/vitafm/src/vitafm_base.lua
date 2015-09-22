@@ -116,7 +116,7 @@ function vitafm.add_programs(path)
 			if f ~= nil then
 				local data = f:read("*a")
 				f:close()
-				local succ, err = vitafm.parsecommands(data, {}, true)
+				local succ, err = vitafm.parse_commands(data, {}, true)
 				if not succ then
 					print("File manager: vsh script syntax error: "..tostring(err))
 				else
@@ -153,12 +153,14 @@ function vitafm.exec_vars(prog, vars, ...)
 end
 
 -- The tokenizer/backtick parser
-function vitafm.parsecommands(text, vars, dryparse)
+function vitafm.parse_commands(command, vars, dryparse)
 	local dryparse = dryparse or false
 	local res = {}
 	local spat, epat, buf, quoted = [=[^(['"`])]=], [=[(['"`])$]=]
 	local vars = vars or {}
-	for str in text:gmatch("%S+") do
+	local pipeno = 1
+	for str in command:gmatch("%S+") do
+		res[pipeno] = res[pipeno] or {}
 		local squoted = str:match(spat)
 		local equoted = str:match(epat)
 		local escaped = str:match([=[(\*)['"`]$]=])
@@ -171,10 +173,12 @@ function vitafm.parsecommands(text, vars, dryparse)
 		end
 		if not buf then
 			if dryparse then
-				table.insert(res, str:gsub(spat,""):gsub(epat,""))
+				table.insert(res[pipeno], str:gsub(spat,""):gsub(epat,""))
 			else
 				if quoted == "`" then
-					table.insert(res, vitafm.run_shell(str:gsub(spat,""):gsub(epat,""), vars))
+					table.insert(res[pipeno], vitafm.run_shell(str:gsub(spat,""):gsub(epat,""), vars))
+				elseif str == "|" then
+					pipeno = pipeno + 1
 				else
 					local v = str:gsub(spat,""):gsub(epat,"")
 					local val
@@ -193,7 +197,7 @@ function vitafm.parsecommands(text, vars, dryparse)
 						end
 						val = tmp
 					end
-					table.insert(res, val)
+					table.insert(res[pipeno], val)
 				end
 			end
 		end
@@ -204,33 +208,61 @@ function vitafm.parsecommands(text, vars, dryparse)
 	return true, res
 end
 
+function vitafm.escape_args(command)
+	local res = ""
+	for k, v in pairs(command) do
+		if type(v) == "string" then
+			res = res + "'" + v:gsub("\\", "\\\\"):gsub("'", "\\'") + "'" + " "
+		elseif type(v) == "number" then
+			res = res + tostring(v) + " "
+		elseif v == true or v == false then
+			res = res + tostring(v) + " "
+		end
+	end
+	return string.strip(res)
+end
+
 function vitafm.run_command(command, vars, appendedargs)
 	local vars = vars or {}
-	local succ, args = vitafm.parsecommands(command, vars)
+	local succ, pipes = vitafm.parse_commands(command, vars)
 	if not succ then
 		ui.error("Command Parser Error", "Error:\n" .. split)
 		return
 	end
-	if appendedargs then
-		for k, v in pairs(appendedargs) do
-			table.insert(args, v)
-		end
-	end
-	local prog = args[1]
-	table.remove(args, 1)
-
-	if vitafm.programs[prog] then
-		local succ, ret = pcall(vitafm.exec_vars, prog, vars, unpack(args))
-		if not succ then
-			print("Program "..prog.." errored: "..ret)
-			ui.error("Error in program "..prog, ret)
+	local res
+	local pipelen = #pipes
+	for no, cmd in pairs(pipes) do
+		if no == pipelen then
+			if appendedargs then
+				for k, v in pairs(appendedargs) do
+					table.insert(cmd, v)
+				end
+			end
 		else
-			return ret
+			if res ~= nil then
+				table.insert(cmd, res)
+				res = nil
+			end
 		end
-	elseif vitafm.aliases[prog] then
-		return vitafm.run_shell(vitafm.aliases[prog].. " ".. command, vars, args)
-	else
-		error("No such program.")
+		local prog = cmd[1]
+		table.remove(cmd, 1)
+
+		if vitafm.programs[prog] then
+			local succ, ret = pcall(vitafm.exec_vars, prog, vars, unpack(cmd))
+			if not succ then
+				print("Program "..prog.." errored: "..ret)
+				ui.error("Error in program "..prog, ret)
+			else
+				res = ret
+			end
+		elseif vitafm.aliases[prog] then
+			res = vitafm.run_shell(vitafm.aliases[prog], vars, cmd)
+		else
+			error("No such program.")
+		end
+		if no == pipelen then
+			return res
+		end
 	end
 end
 function vitafm.run_shell(code, vars, appendedargs)
@@ -247,6 +279,10 @@ function vitafm.run_shell(code, vars, appendedargs)
 		end
 	end
 end
+
+-- Handy aliases.
+vitafm.sh = vitafm.run_shell
+sh = vitafm.run_shell
 
 local function call_prog(command, file, ext)
 	return vitafm.run_shell(command, {

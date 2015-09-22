@@ -66,7 +66,7 @@ function string.lines(str)
   return t
 end
 
--- String padding
+-- String padding and stripping
 function string.lpad(str, len, chr)
   local char = chr or " "
   return str .. string.rep(char, len - #str)
@@ -75,6 +75,10 @@ function string.rpad(str, len, chr)
   local char = chr or " "
   return string.rep(char, len - #str) .. str
 end
+function string.strip(s)
+  return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+-- from PiL2 20.4
 
 -- Table find
 function table.find(t, val)

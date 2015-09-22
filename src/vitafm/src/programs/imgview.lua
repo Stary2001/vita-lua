@@ -7,7 +7,13 @@ if ext == nil then
 		return
 	end
 end
-local f = physfs.open(args[1])
+local file = args[1]
+local f
+if string.find(file, "^/") then
+	f = physfs.open(file)
+else
+	f = io.open(file, "r")
+end
 if f ~= nil then
 	local data = f:read("*a")
 	f:close()

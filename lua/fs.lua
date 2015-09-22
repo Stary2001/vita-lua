@@ -134,11 +134,11 @@ function fs.list(path)
 end
 
 function fs.mkdir(path)
-  ffi.C.sceIoMkdir(path, bit.bor(ffi.C.PSP2_S_IRWXU, ffi.C.PSP2_S_IRWXG, ffi.C.PSP2_S_IXOTH)) -- all the permissions!
+  return ffi.C.sceIoMkdir(path, bit.bor(ffi.C.PSP2_S_IRWXU, ffi.C.PSP2_S_IRWXG, ffi.C.PSP2_S_IXOTH)) == 0 -- all the permissions!
 end
 
 function fs.rmdir(path)
-  ffi.C.sceIoRmdir(path)
+  return ffi.C.sceIoRmdir(path) == 0
 end
 
 function fs.is_dir(path)
