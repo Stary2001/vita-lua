@@ -1,8 +1,12 @@
 -- rm.lua
 local args = {...}
 local file = args[1]
-if string.find(file, "^/") then
-	return physfs.delete(file)
+if file then
+	if string.find(file, "^/") then
+		return physfs.delete(file)
+	else
+		return os.remove(file)
+	end
 else
-	return os.remove(file)
+	error("Usage: rm file")
 end

@@ -1,8 +1,12 @@
 -- rmdir.Lua
 local args = {...}
 local file = args[1]
-if string.find(file, "^/") then
-	return physfs.rmdir(file)
+if file then
+	if string.find(file, "^/") then
+		return physfs.rmdir(file)
+	else
+		return fs.rmdir(file)
+	end
 else
-	return fs.rmdir(file)
+	error("Usage: rmdir directory")
 end
