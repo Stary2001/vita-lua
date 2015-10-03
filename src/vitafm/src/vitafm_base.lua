@@ -64,14 +64,14 @@ function vitafm.lua(file)
 		if err ~= nil then
 			print("File manager: Lua syntax error: "..tostring(err))
 			--ui.error("lua: Syntax Error", "Error:\n" .. tostring(err))
-			error(tostring(err))
+			error(tostring(err), 0)
 			return
 		end
 		local success, err = pcall(fn)
 		if not success then
 			print("File manager: Lua script error: "..tostring(err))
 			--ui.error("lua: Script Error", "Error:\n" .. tostring(err))
-			error(tostring(err))
+			error(tostring(err), 0)
 			return
 		end
 	else
@@ -382,6 +382,7 @@ function vitafm.run()
 				local menuitems = {
 					"Run Program",
 					nil,
+					"Reload Config",
 					"Exit VitaFM",
 					"Back"
 				}
@@ -397,6 +398,8 @@ function vitafm.run()
 							return ret
 						end
 					end
+				elseif res == "Reload Config" then
+					vitafm.parse_config(confpath)
 				elseif res == "Exit VitaFM" then
 					uvl.exit(0)
 				end
