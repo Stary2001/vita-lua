@@ -9,20 +9,20 @@
 #include <psp2/kernel/threadmgr.h>
 #include <psp2/net/http.h>
 #include <psp2/sysmodule.h>
-//#include <debugnet.h>
+#include <debugnet.h>
 #include <vita2d.h>
 #include <psp2/ctrl.h>
 
 int panic(lua_State *l)
 {
-	//debugNetPrintf(DEBUG, "Lua paniced with '%s!'\n", lua_tostring(l, -1));
+	debugNetPrintf(DEBUG, "Lua paniced with '%s!'\n", lua_tostring(l, -1));
 	sceKernelExitProcess(0);
 	return 0;
 }
 
 int print(lua_State *l)
 {
-	//debugNetPrintf(DEBUG, "[Lua] %s\n", lua_tostring(l, -1));
+	debugNetPrintf(DEBUG, "[Lua] %s\n", lua_tostring(l, -1));
 	return 0;
 }
 
@@ -36,7 +36,7 @@ unsigned int splash_data_len;
 
 void open_ffi(lua_State *l);
 
-int main(int argc, char **argv)
+int main()
 {
 	lua_State *lua = luaL_newstate();
 	lua_atpanic(lua, panic);
@@ -46,6 +46,7 @@ int main(int argc, char **argv)
 
 	sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
 	sceSysmoduleLoadModule(SCE_SYSMODULE_HTTP);
+	debugNetInit(DEBUGGER_IP, DEBUGGER_PORT, DEBUG);
 	sceHttpInit(1024 * 50);
 
 	luaL_openlibs(lua);
@@ -78,21 +79,18 @@ int main(int argc, char **argv)
 		vita2d_end_drawing();
 		vita2d_swap_buffers();
 	}
-	/*vita2d_fini();
-	vita2d_free_texture(tex);
-	vita2d_init();*/
 
 	if(luaL_loadstring(lua, vitafm_data) == 0)
 	{
 		if(lua_pcall(lua, 0, 0, 0) != 0)
 		{
-			//debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
+			debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
 			lua_pop(lua, 1);
 		}
 	}
 	else
 	{
-		//debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
+		debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
 		lua_pop(lua, 1);
 	}
 
@@ -100,13 +98,13 @@ int main(int argc, char **argv)
 	{
 		if(lua_pcall(lua, 0, 0, 0) != 0)
 		{
-			//debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
+			debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
 			lua_pop(lua, 1);
 		}
 	}
 	else
 	{
-		//debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
+		debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
 		lua_pop(lua, 1);
 	}
 
