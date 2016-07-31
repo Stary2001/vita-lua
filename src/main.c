@@ -8,20 +8,21 @@
 #include <psp2/kernel/processmgr.h>
 #include <psp2/kernel/threadmgr.h>
 #include <psp2/net/http.h>
-#include <debugnet.h>
+#include <psp2/sysmodule.h>
+//#include <debugnet.h>
 #include <vita2d.h>
 #include <psp2/ctrl.h>
 
 int panic(lua_State *l)
 {
-	debugNetPrintf(DEBUG, "Lua paniced with '%s!'\n", lua_tostring(l, -1));
+	//debugNetPrintf(DEBUG, "Lua paniced with '%s!'\n", lua_tostring(l, -1));
 	sceKernelExitProcess(0);
 	return 0;
 }
 
 int print(lua_State *l)
 {
-	debugNetPrintf(DEBUG, "[Lua] %s\n", lua_tostring(l, -1));
+	//debugNetPrintf(DEBUG, "[Lua] %s\n", lua_tostring(l, -1));
 	return 0;
 }
 
@@ -35,16 +36,17 @@ unsigned int splash_data_len;
 
 void open_ffi(lua_State *l);
 
-int main()
+int main(int argc, char **argv)
 {
-	debugNetInit(DEBUGGER_IP, DEBUGGER_PORT, DEBUG);
-	debugNetPrintf(DEBUG, "creating\n");
 	lua_State *lua = luaL_newstate();
 	lua_atpanic(lua, panic);
 
 	vita2d_init();
 	PHYSFS_init(NULL);
-	sceHttpInit(100);
+
+	sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
+	sceSysmoduleLoadModule(SCE_SYSMODULE_HTTP);
+	sceHttpInit(1024 * 50);
 
 	luaL_openlibs(lua);
 	open_ffi(lua);
@@ -84,13 +86,13 @@ int main()
 	{
 		if(lua_pcall(lua, 0, 0, 0) != 0)
 		{
-			debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
+			//debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
 			lua_pop(lua, 1);
 		}
 	}
 	else
 	{
-		debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
+		//debugNetPrintf(DEBUG, "vitafm err: %s\n", lua_tostring(lua, -1));
 		lua_pop(lua, 1);
 	}
 
@@ -98,13 +100,13 @@ int main()
 	{
 		if(lua_pcall(lua, 0, 0, 0) != 0)
 		{
-			debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
+			//debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
 			lua_pop(lua, 1);
 		}
 	}
 	else
 	{
-		debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
+		//debugNetPrintf(DEBUG, "bootscript err: %s\n", lua_tostring(lua, -1));
 		lua_pop(lua, 1);
 	}
 
@@ -113,10 +115,6 @@ int main()
 	vita2d_fini();
 	vita2d_free_texture(tex);
 
-#ifdef uvl_exit
-	uvl_exit(0)
-#else
 	sceKernelExitProcess(0);
-#endif
 	return 0;
 }

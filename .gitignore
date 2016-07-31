@@ -4,6 +4,9 @@ src/ffi/*.o
 lua/*.o
 *.elf
 *.velf
+*.vpk
+param.sfo
+eboot.bin
 
 # Generated source
 /src/ffi_init.c

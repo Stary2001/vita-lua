@@ -1,4 +1,5 @@
 TARGET = vita-lua
+TITLE_ID = STAR00001
 
 BOOTSCRIPT ?= vitafm
 FONT ?= src/font/UbuntuMono-R.ttf
@@ -15,7 +16,6 @@ LIBS     = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSce
 INCLUDES = -I./includes -I$(VITASDK)/arm-vita-eabi/include/luajit-2.0
 
 PREFIX = $(VITASDK)/bin/arm-vita-eabi
-DB     = db.json extra.json
 
 CC = $(PREFIX)-gcc
 LD = $(PREFIX)-ld
@@ -26,11 +26,18 @@ DEFS = -DDEBUGGER_IP=\"$(DEBUGGER_IP)\" -DDEBUGGER_PORT=$(DEBUGGER_PORT)
 
 CFLAGS  = -Wl,-q -Wall -O3 -std=gnu99 $(DEFS) $(INCLUDES)
 
-all: $(TARGET).velf
+all: $(TARGET).vpk
+
+%.vpk: eboot.bin
+	vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" param.sfo
+	vita-pack-vpk -s param.sfo -b eboot.bin $@
+
+eboot.bin: $(TARGET).velf
+	vita-make-fself $< $@
 
 %.velf: %.elf
 	$(PREFIX)-strip -g $<
-	vita-elf-create $< $@ $(DB) >/dev/null
+	vita-elf-create $< $@ >/dev/null
 
 %.c: %.lua
 	@if [ "$(MINIFY)" == "yes" ]; then \
@@ -80,3 +87,11 @@ $(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/font.o s
 clean:
 	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) $(FFI_GLUE_O) $(FFI_GLUE_C) src/ffi_init.c src/boot.c src/splash.c src/vitafm/vitafm.c src/vitafm/vitafm.o
 	make -C src/vitafm clean
+
+vpksend: $(TARGET).vpk
+	curl -T $(TARGET).vpk ftp://$(PSVITAIP):1337/ux0:/
+	@echo "Sent."
+
+send: eboot.bin
+	curl -T eboot.bin ftp://$(PSVITAIP):1337/ux0:/app/$(TITLE_ID)/
+	@echo "Sent."
