@@ -11,7 +11,7 @@ FFI_GLUE_C   = $(patsubst %.lua, %.c, $(FFI_GLUE))
 FFI_GLUE_O   = $(patsubst %.lua, %.o, $(FFI_GLUE))
 OBJS         = src/main.o
 
-LIBS     = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSceDisplay_stub -lSceGxm_stub -lSceCtrl_stub -lSceNet_stub -lSceNetCtl_stub -lSceHttp_stub -lSceAudio_stub -lScePower_stub -lUVLoader_stub -lluajit-5.1 -lm -lphysfs
+LIBS     = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSceDisplay_stub -lSceGxm_stub -lSceCtrl_stub -lSceNet_stub -lSceNetCtl_stub -lSceHttp_stub -lSceAudio_stub -lScePower_stub -lSceSysmodule_stub -lluajit-5.1 -lm -lphysfs
 INCLUDES = -I./includes -I$(VITASDK)/arm-vita-eabi/include/luajit-2.0
 
 PREFIX = $(VITASDK)/bin/arm-vita-eabi

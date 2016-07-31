@@ -68,7 +68,7 @@ int main()
 		if (counter >= goal)
 			break;
 		sceCtrlPeekBufferPositive(0, &pad, 1);
-		if (pad.buttons & PSP2_CTRL_ANY)
+		if (pad.buttons & SCE_CTRL_ANY)
 			break;
 		vita2d_start_drawing();
 		vita2d_clear_screen();
