@@ -1,9 +1,9 @@
 -- vitafm
 -- Loads up ui.choose_file and applies magic.
-local physfsroot = "cache0:"
-local dir = "/VitaDefilerClient/Documents"
+local physfsroot = "ux0:"
+local dir = "/"
 local binpath = "/bin"
-local confpath = "/VitaDefilerClient/Documents/vitafm.cfg"
+local confpath = "/vitafm.conf"
 
 physfs.mount(physfsroot.."/")
 
