@@ -7,7 +7,7 @@ lua/*.o
 *.vpk
 param.sfo
 eboot.bin
-vpktemp/
+/vpktmp
 
 # Generated source
 /src/ffi_init.c

@@ -25,13 +25,14 @@ CFLAGS  = -Wl,-q -Wall -O3 -std=gnu99 $(DEFS) $(INCLUDES)
 
 all: $(TARGET).vpk
 
-$(TARGET).vpk: eboot.bin lua/vitafm.lua $(BOOTSCRIPT)
-	mkdir vpktmp/sce_sys -p || true
+$(TARGET).vpk: eboot.bin vpktmp/lib/vitafm.lua $(wildcard lua/*) $(BOOTSCRIPT)
+	mkdir -p vpktmp/sce_sys || true
+	mkdir vpktmp/lib || true
 	vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" vpktmp/sce_sys/param.sfo
 	cp eboot.bin vpktmp/eboot.bin
 	cp $(BOOTSCRIPT) vpktmp/boot.lua
 	cp $(FONT) vpktmp/default_font.ttf
-	cp lua/ vpktmp/ -r
+	cp lua/* vpktmp/lib -r
 	cd vpktmp && zip ../$@ -r *
 
 eboot.bin: $(TARGET).velf
@@ -41,9 +42,10 @@ eboot.bin: $(TARGET).velf
 	$(PREFIX)-strip -g $<
 	vita-elf-create $< $@ >/dev/null
 
-lua/vitafm.lua:
-	make -C src/vitafm; \
-	cp src/vitafm/vitafm.lua lua/vitafm.lua
+vpktmp/lib/vitafm.lua: $(wildcard src/vitafm/src/*lua) $(wildcard src/vitafm/src/programs/*)
+	mkdir -p vpktmp/lib || true
+	make -C src/vitafm
+	cp src/vitafm/vitafm.lua $@
 
 src/ffi_init.c: $(FFI_BINDINGS_O)
 	./scripts/generate_ffi_init_list.sh
@@ -52,7 +54,7 @@ $(TARGET).elf: $(OBJS) $(FFI_BINDINGS_O) src/ffi_init.o
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 clean:
-	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) src/ffi_init.c
+	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) src/ffi_init.c vpktmp
 	make -C src/vitafm clean
 
 vpksend: $(TARGET).vpk

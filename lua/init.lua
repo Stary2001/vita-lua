@@ -1,5 +1,6 @@
-package.path = "?;?.lua;app0:lua/?;app0:lua/?.lua"
+package.path = "?;?.lua;app0:/lib/?;app0:/lib/?.lua"
 local libs = {"audio", "battery", "colors", "fs", "hash", "http", "input", "misc", "physfs", "touch", "ui", "vita2d", "vitafm"}
-for k,v in pairs(libs) do
-	require(v)
+for _, lib in pairs(libs) do
+	print("require()-ing "..lib)
+	require(lib)
 end
