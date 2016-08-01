@@ -29,8 +29,10 @@ CFLAGS  = -Wl,-q -Wall -O3 -std=gnu99 $(DEFS) $(INCLUDES)
 all: $(TARGET).vpk
 
 %.vpk: eboot.bin
-	vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" param.sfo
-	vita-pack-vpk -s param.sfo -b eboot.bin $@
+	mkdir vpktmp || true
+	vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" vpktmp/param.sfo
+	cp eboot.bin vpktmp/eboot.bin
+	cd vpktmp && zip ../$@ -r *
 
 eboot.bin: $(TARGET).velf
 	vita-make-fself $< $@
