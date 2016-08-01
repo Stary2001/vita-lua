@@ -272,7 +272,7 @@ function ui.choose_file(startdir, title, selected, hook)
 
     res, selected, abort = ui.choose(t, title or table.concat(path, "/").."/", selected, function(res, old_pad, pad)
       if hook then
-        return hook(res, old_pad, pad, table.concat(path, "/") .. "/" .. res), selected
+        return hook(res or "", old_pad, pad, table.concat(path, "/") .. ((res and "/" .. res) or "")), selected
       end
     end)
     if abort then

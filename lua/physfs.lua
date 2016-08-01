@@ -209,7 +209,7 @@ function physfs.mkdir(path)
 end
 
 function physfs.delete(path)
-  return ffi.C.PHYSFS_delete() ~= 0
+  return ffi.C.PHYSFS_delete(path) ~= 0
 end
 
 function physfs.list(path)

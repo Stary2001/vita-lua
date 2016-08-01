@@ -4,10 +4,12 @@
 #include <lauxlib.h>
 #include <physfs.h>
 
+#include <stdlib.h>
 #include <string.h>
 #include <psp2/kernel/processmgr.h>
 #include <psp2/kernel/threadmgr.h>
 #include <psp2/net/http.h>
+#include <psp2/net/net.h>
 #include <psp2/sysmodule.h>
 #include <debugnet.h>
 #include <vita2d.h>
@@ -45,6 +47,13 @@ int main()
 	PHYSFS_init(NULL);
 
 	sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
+	SceNetInitParam netInitParam;
+	int size = 1024 * 512;
+	netInitParam.memory = malloc(size);
+	netInitParam.size = size;
+	netInitParam.flags = 0;
+	sceNetInit(&netInitParam);
+
 	sceSysmoduleLoadModule(SCE_SYSMODULE_HTTP);
 	debugNetInit(DEBUGGER_IP, DEBUGGER_PORT, DEBUG);
 	sceHttpInit(1024 * 50);

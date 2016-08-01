@@ -10,8 +10,8 @@ player_is_psp = true
 
 function start_player()
   vita2d.init()
-  local monospace_font = vita2d.load_font("cache0:/VitaDefilerClient/Documents/DejaVuSans.ttf")
-  local prop_font = vita2d.load_font("cache0:/VitaDefilerClient/Documents/DejaVuSans.ttf")
+  local monospace_font = vita2d.load_font()
+  local prop_font = vita2d.load_font()
 
   System = {}
   System.setCpuSpeed = function () end
