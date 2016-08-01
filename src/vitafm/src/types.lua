@@ -19,9 +19,6 @@ vitafm.types = {
 	-- Physfs archives.
 	[".zip"] = "mount %F",
 
-	-- Vita Homebrew files
-	[".velf"] = "uvloader %F",
-
 	-- Ask for handler
 	["*"] = "ask %f %e"
 }
