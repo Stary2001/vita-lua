@@ -596,7 +596,10 @@ end
 
 function vita2d.load_font(f)
   if not f then
-    return vita2d.load_font_data(vita2d.default_font_data)
+    print("default font!")
+    fon = vita2d.load_font("app0:default_font.ttf")
+    print("!")
+    return fon
   else
     if fs.is_relative(f) then
       f = fs.working_dir .. "/" .. f

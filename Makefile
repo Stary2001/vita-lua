@@ -1,15 +1,12 @@
 TARGET = vita-lua
 TITLE_ID = STAR00001
 
-BOOTSCRIPT ?= vitafm
+BOOTSCRIPT ?= src/vitafm/src/vitafm_launch.lua
 FONT ?= src/font/UbuntuMono-R.ttf
-SPLASH ?= src/revitalize_splash.png
-MINIFY ?= no
 
 FFI_BINDINGS = $(wildcard src/ffi/*.c)
-FFI_GLUE     = $(wildcard lua/*.lua)
-FFI_GLUE_C   = $(patsubst %.lua, %.c, $(FFI_GLUE))
-FFI_GLUE_O   = $(patsubst %.lua, %.o, $(FFI_GLUE))
+FFI_BINDINGS_O = $(patsubst %.c, %.o, $(FFI_BINDINGS))
+
 OBJS         = src/main.o
 
 LIBS     = -ldebugnet -lvita2d -lfreetype -lpng -lz -ljpeg -lSceTouch_stub -lSceDisplay_stub -lSceGxm_stub -lSceCtrl_stub -lSceNet_stub -lSceNetCtl_stub -lSceHttp_stub -lSceAudio_stub -lScePower_stub -lSceSysmodule_stub -lluajit-5.1 -lm -lphysfs
@@ -28,10 +25,13 @@ CFLAGS  = -Wl,-q -Wall -O3 -std=gnu99 $(DEFS) $(INCLUDES)
 
 all: $(TARGET).vpk
 
-%.vpk: eboot.bin
-	mkdir vpktmp || true
-	vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" vpktmp/param.sfo
+$(TARGET).vpk: eboot.bin lua/vitafm.lua $(BOOTSCRIPT)
+	mkdir vpktmp/sce_sys -p || true
+	vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" vpktmp/sce_sys/param.sfo
 	cp eboot.bin vpktmp/eboot.bin
+	cp $(BOOTSCRIPT) vpktmp/boot.lua
+	cp $(FONT) vpktmp/default_font.ttf
+	cp lua/ vpktmp/ -r
 	cd vpktmp && zip ../$@ -r *
 
 eboot.bin: $(TARGET).velf
@@ -41,53 +41,18 @@ eboot.bin: $(TARGET).velf
 	$(PREFIX)-strip -g $<
 	vita-elf-create $< $@ >/dev/null
 
-%.c: %.lua
-	@if [ "$(MINIFY)" == "yes" ]; then \
-		echo luamin $< > $<_min; \
-		luamin $< > $<_min; \
-		echo ./scripts/generate_init.sh $<_min $*.c; \
-		./scripts/generate_init.sh $<_min $*.c; \
-		echo rm $<_min; \
-		rm $<_min; \
-	else \
-		echo ./scripts/generate_init.sh $< $*.c; \
-		./scripts/generate_init.sh $< $*.c; \
-	fi
+lua/vitafm.lua:
+	make -C src/vitafm; \
+	cp src/vitafm/vitafm.lua lua/vitafm.lua
 
-src/boot.c:
-	@if [ "$(BOOTSCRIPT)" == "vitafm" ]; then \
-		echo ./scripts/generate_bootc.sh src/vitafm/src/vitafm_launch.lua; \
-		./scripts/generate_bootc.sh src/vitafm/src/vitafm_launch.lua; \
-	else \
-		echo ./scripts/generate_bootc.sh $(BOOTSCRIPT); \
-		./scripts/generate_bootc.sh $(BOOTSCRIPT); \
-	fi
-
-src/vitafm/vitafm.c: src/vitafm/src/vitafm_launch.lua
-	@if [ "$(MINIFY)" == "YES" ]; then \
-		make -C src/vitafm min; \
-		echo ./scripts/generate_vitafmc.sh src/vitafm/vitafm_min.lua; \
-		./scripts/generate_vitafmc.sh src/vitafm/vitafm_min.lua; \
-	else \
-		make -C src/vitafm; \
-		echo ./scripts/generate_vitafmc.sh src/vitafm/vitafm.lua; \
-		./scripts/generate_vitafmc.sh src/vitafm/vitafm.lua; \
-	fi
-
-src/font.c: $(FONT)
-	./scripts/generate_defaultfont.sh $<
-
-src/splash.c: $(SPLASH)
-	./scripts/generate_splash.sh $<
-
-src/ffi_init.c: $(FFI_GLUE)
+src/ffi_init.c: $(FFI_BINDINGS_O)
 	./scripts/generate_ffi_init_list.sh
 
-$(TARGET).elf: $(OBJS) $(FFI_BINDINGS) src/ffi_init.o $(FFI_GLUE_O) src/font.o src/boot.o src/splash.o src/vitafm/vitafm.o
+$(TARGET).elf: $(OBJS) $(FFI_BINDINGS_O) src/ffi_init.o
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 clean:
-	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) $(FFI_GLUE_O) $(FFI_GLUE_C) src/ffi_init.c src/boot.c src/splash.c src/vitafm/vitafm.c src/vitafm/vitafm.o
+	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) src/ffi_init.c
 	make -C src/vitafm clean
 
 vpksend: $(TARGET).vpk

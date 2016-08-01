@@ -117,7 +117,7 @@ int sceIoChstat(const char *file, SceIoStat *stat, int bits);
 ]]
 
 fs = {}
-fs.working_dir = "cache0:/VitaDefilerClient/Documents"
+fs.working_dir = "ux0:/"
 
 function fs.list(path)
   t = {}

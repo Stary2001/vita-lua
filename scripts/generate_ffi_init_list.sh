@@ -17,12 +17,6 @@ done
 
 echo >> src/ffi_init.c
 
-find lua/ -type f -name '*.lua' | while read f; do
-	name=${f%.lua}
-	name=${name#lua/}
-	echo "extern const char *${name}_data;" >> src/ffi_init.c
-done
-
 cat << EOF >> src/ffi_init.c
 void open_ffi(lua_State *l)
 {
@@ -31,19 +25,6 @@ find src/ffi/ -type f -name '*.c' | while read f; do
 	name=${f%.c}
 	name=${name#src/ffi/}
 	echo -e "\tffi_register_${name}();" >> src/ffi_init.c
-done
-
-find lua/ -type f -name '*.lua' | while read f; do
-	name=${f%.lua}
-	name=${name#lua/}
-        echo -e "\tif(luaL_loadstring(l, ${name}_data) != 0)\n\t{\n\t\tdebugNetPrintf(DEBUG, \"err: %s\\\n\", lua_tostring(l, -1)); lua_pop(l, 1);\n\t}\n" >> src/ffi_init.c
-        cat << EOF >> src/ffi_init.c
-        if(lua_pcall(l, 0, 0, 0) != 0)
-        {
-                debugNetPrintf(DEBUG, "err: %s\n", lua_tostring(l, -1));
-                lua_pop(l, 1);
-        }
-EOF
 done
 
 echo '}' >> src/ffi_init.c
