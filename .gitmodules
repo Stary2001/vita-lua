@@ -1,0 +1,3 @@
+[submodule "lua/vfs"]
+	path = lua/vfs
+	url = https://github.com/carbonsrv/vfs

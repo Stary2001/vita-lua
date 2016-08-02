@@ -2,6 +2,9 @@
 ui = {}
 function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor, optioncolor, font_custom)
   print("ui.choose")
+  if not options then
+    error("ui.choose: no options given")
+  end
   local font_to_use = font_custom or font or vita2d.load_font()
   local selectedoptcolor = selectedcolor or colors.red
   local optioncolor = optioncolor or colors.white
@@ -266,7 +269,7 @@ function ui.choose_file(startdir, title, selected, hook)
   end
   while true do
     print("Getting list of files")
-    local t = physfs.list(table.concat(path, "/") .. "/")
+    local t = vfs.list(table.concat(path, "/") .. "/")
     if not string.find(table.concat(path, "/") .. "/", "^/$") then
       table.insert(t, 1, "..")
     end
@@ -291,7 +294,7 @@ function ui.choose_file(startdir, title, selected, hook)
         old_dir = table.remove(path)
       end
     else
-      if physfs.is_dir(table.concat(path, "/") .. "/" .. res) then
+      if vfs.isdir(table.concat(path, "/") .. "/" .. res) then
         table.insert(path, res)
         selected = 1
       else

@@ -2,10 +2,10 @@
 local args = {...}
 local file = args[1]
 if file then
-	if string.find(file, "^/") then
-		return physfs.mkdir(file)
+	if not vfs.exists(file) then
+		assert(vfs.mkdir(file))
 	else
-		return fs.mkdir(file)
+		error("File or directory already exists!")
 	end
 else
 	error("Usage: mkdir directory")

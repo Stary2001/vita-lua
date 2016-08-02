@@ -25,16 +25,19 @@ CFLAGS  = -Wl,-q -Wall -O3 -std=gnu99 $(DEFS) $(INCLUDES)
 
 all: $(TARGET).vpk
 
-$(TARGET).vpk: eboot.bin vpktmp/lib/vitafm.lua $(wildcard lua/*) $(BOOTSCRIPT)
-	rm ../$@ || true
+$(TARGET).vpk: eboot.bin vpktmp/lib/vitafm.lua $(wildcard lua/*.lua) lua/vfs/init.lua lua/vfs/LICENSE $(wildcard lua/vfs/backends/*) $(BOOTSCRIPT)
+	rm $@ || true
 	mkdir -p vpktmp/sce_sys || true
 	mkdir vpktmp/lib || true
 	vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" vpktmp/sce_sys/param.sfo
 	cp eboot.bin vpktmp/eboot.bin
 	cp $(BOOTSCRIPT) vpktmp/boot.lua
 	cp $(FONT) vpktmp/default_font.ttf
-	cp lua/* vpktmp/lib -r
-	cd vpktmp && zip ../$@ -r *
+	cp lua/*.lua vpktmp/lib
+	mkdir -p vpktmp/lib/vfs/backends || true
+	cp lua/vfs/init.lua lua/vfs/LICENSE vpktmp/lib/vfs
+	cp lua/vfs/backends/*.lua vpktmp/lib/vfs/backends
+	cd vpktmp && zip -r --symlinks ../$@ *
 
 eboot.bin: $(TARGET).velf
 	vita-make-fself $< $@

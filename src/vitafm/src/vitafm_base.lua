@@ -1,11 +1,9 @@
 -- vitafm
 -- Loads up ui.choose_file and applies magic.
-local physfsroot = "ux0:"
+local fsroot = "app0:"
 local dir = "/"
 local binpath = "/bin"
 local confpath = "/vitafm.conf"
-
-physfs.mount(physfsroot.."/")
 
 vitafm = {}
 
@@ -19,10 +17,8 @@ local function config_parse(file)
 	local c = {}
 	local subsect
 
-	local f = physfs.open(file)
-	if f then
-		local data = f:read("*a")
-		f:close()
+	if vfs.exists(file) then
+		local data = assert(vfs.read(file))
 		for n, line in pairs(string.lines(data)) do
 			local s = line:match("^%[([^%]]+)%]$")
 			if s then
@@ -56,10 +52,8 @@ end
 -- Actual vitafm.programs
 function vitafm.lua(file)
 	print("Lua file: ".. file)
-	local f = physfs.open(file)
-	if f ~= nil then
-		local data = f:read("*a")
-		f:close()
+	if vfs.exists(file) then
+		local data = assert(vfs.read(file))
 		local fn, err = loadstring(data)
 		if err ~= nil then
 			print("File manager: Lua syntax error: "..tostring(err))
@@ -95,14 +89,13 @@ vitafm.programs = {
 vitafm.aliases = {}
 
 function vitafm.add_programs(path)
-	local dir = physfs.list(path)
+	local dir = vfs.list(path)
+	if not dir then return end
 	for k, v in pairs(dir) do
 		if v:find("%.lua$") then
 			local filepath = path.."/"..v
-			local f = physfs.open(filepath)
-			if f ~= nil then
-				local data = f:read("*a")
-				f:close()
+			if vfs.exists(filepath) then
+				local data = assert(vfs.read(filepath))
 				local fn, err = loadstring(data)
 				if err ~= nil then
 					print("File manager: Lua plugin load error: "..tostring(err))
@@ -112,10 +105,8 @@ function vitafm.add_programs(path)
 			end
 		elseif v:find("%.vsh$") then
 			local filepath = path.."/"..v
-			local f = physfs.open(filepath)
-			if f ~= nil then
-				local data = f:read("*a")
-				f:close()
+			if vfs.exists(filepath) then
+				local data = assert(vfs.read(filepath))
 				local succ, err = vitafm.parse_commands(data, {}, true)
 				if not succ then
 					print("File manager: vsh script syntax error: "..tostring(err))
@@ -287,7 +278,7 @@ sh = vitafm.run_shell
 local function call_prog(command, file, ext)
 	return vitafm.run_shell(command, {
 		["%%f"] = file,
-		["%%F"] = physfsroot..file,
+		["%%F"] = fsroot..file,
 		["%%e"] = ext
 	})
 end
@@ -339,7 +330,7 @@ vitafm.programs["ask"] = vitafm.ask
 -- Parse Config
 function vitafm.parse_config(path)
 	print("Looking for config...")
-	if physfs.exists(path) then
+	if vfs.exists(path) then
 		print("Loading config...")
 		local conf = config_parse(path)
 		if type(conf.filetypes) == "table" then
@@ -349,11 +340,6 @@ function vitafm.parse_config(path)
 		end
 		if type(conf.aliases) == "table" then
 			vitafm.aliases = conf.aliases
-		end
-		if type(conf.mount) == "table" then
-			for k, v in pairs(conf.mount) do
-				physfs.mount(v)
-			end
 		end
 		print("Loaded config.")
 	else
@@ -371,7 +357,7 @@ function vitafm.run()
 	print("vitafm.run()")
 	local selected
 	while true do
-		if physfs.is_dir(binpath) then
+		if vfs.isdir(binpath) then
 			vitafm.add_programs(binpath)
 		end
 		print("vitafm: added programs")

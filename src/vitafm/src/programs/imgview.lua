@@ -9,15 +9,8 @@ if args[1] then
 		end
 	end
 	local file = args[1]
-	local f
-	if string.find(file, "^/") then
-		f = physfs.open(file)
-	else
-		f = io.open(file, "r")
-	end
-	if f ~= nil then
-		local data = f:read("*a")
-		f:close()
+	if vfs.exists(file) then
+		local data = assert(vfs.read(file))
 		local image = vita2d.load_texture_data(ext:gsub("%.", ""), data)
 		ui.view_image(image)
 	else
