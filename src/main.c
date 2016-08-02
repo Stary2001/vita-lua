@@ -109,7 +109,7 @@ int main()
         }
     }
 
-    debugf("[Lua] Loading app0:/boot.lua ...\n");
+    /*debugf("[Lua] Loading app0:/boot.lua ...\n");
     if(luaL_loadfile(lua, "app0:/boot.lua") == 0)
     {
         if(lua_pcall(lua, 0, 0, 0) != 0)
@@ -122,7 +122,7 @@ int main()
     {
     debugf("[Lua] bootscript load err: %s\n", lua_tostring(lua, -1));
         lua_pop(lua, 1);
-    }
+    }*/
 
     debugf("Deinit. Goodbye.\n");
     sceHttpTerm();

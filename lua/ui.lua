@@ -1,6 +1,7 @@
 -- ui
 ui = {}
 function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor, optioncolor, font_custom)
+  print("ui.choose")
   local font_to_use = font_custom or font or vita2d.load_font()
   local selectedoptcolor = selectedcolor or colors.red
   local optioncolor = optioncolor or colors.white
@@ -15,6 +16,7 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
   end
 
   while true do
+    print("peek, start, clear")
     local pad = input.peek()
     vita2d.start_drawing()
     vita2d.clear_screen()
@@ -25,16 +27,19 @@ function ui.choose(options, title, selected, hook, titlecolor, selectedoptcolor,
     local max = math.min(#options, (selected <= num and num or selected))
 
     if title then
+      print("drawing title text")
       font_to_use:draw_text(0, 0, titlecolor, 30, title)
       p = 1
     end
     for i=min, max do
       if options[i] then
+        print("Drawing item")
         font_to_use:draw_text(0, p * 30, i == selected and selectedoptcolor or optioncolor, 30, options[i])
       end
       p = p + 1
     end
 
+    print("End drawing, swap buffers")
     vita2d.end_drawing()
     vita2d.swap_buffers()
 
@@ -249,6 +254,7 @@ function ui.view_image(tex, font_custom)
 end
 
 function ui.choose_file(startdir, title, selected, hook)
+  print("ui.choose_file")
   local old_dir
 
   local startdir = string.gsub(startdir or "/", "/$", "")
@@ -259,6 +265,7 @@ function ui.choose_file(startdir, title, selected, hook)
     end
   end
   while true do
+    print("Getting list of files")
     local t = physfs.list(table.concat(path, "/") .. "/")
     if not string.find(table.concat(path, "/") .. "/", "^/$") then
       table.insert(t, 1, "..")
@@ -271,6 +278,7 @@ function ui.choose_file(startdir, title, selected, hook)
     end
 
     res, selected, abort = ui.choose(t, title or table.concat(path, "/").."/", selected, function(res, old_pad, pad)
+      print("file_chooser hook")
       if hook then
         return hook(res or "", old_pad, pad, table.concat(path, "/") .. ((res and "/" .. res) or "")), selected
       end

@@ -548,6 +548,7 @@ local font_mt =
     text_width = ffi.C.vita2d_font_text_width,
     text_height = ffi.C.vita2d_font_text_height,
     draw_text = function(self, x, y, color, size, text)
+    	print("trying to draw font")
       ffi.C.vita2d_font_draw_text(self, x, y, color, size, tostring(text))
     end
   }
@@ -595,10 +596,12 @@ function vita2d.load_font_data(buff)
 end
 
 function vita2d.load_font(f)
+	print("vita2d: loading font")
   if not f then
     print("default font!")
-    fon = vita2d.load_font("app0:default_font.ttf")
+    fon = vita2d.load_font("app0:/default_font.ttf")
     print("!")
+    print(tostring(fon))
     return fon
   else
     if fs.is_relative(f) then

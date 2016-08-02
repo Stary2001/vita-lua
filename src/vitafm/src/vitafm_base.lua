@@ -368,12 +368,15 @@ end
 
 -- Main loop.
 function vitafm.run()
+	print("vitafm.run()")
 	local selected
 	while true do
 		if physfs.is_dir(binpath) then
 			vitafm.add_programs(binpath)
 		end
+		print("vitafm: added programs")
 		file, dir, selected = ui.choose_file(dir, nil, selected, (function(sel, old_pad, pad, path)
+			print("hook")
 			if old_pad:triangle() and not pad:triangle() then -- "Open as" menu
 				vitafm.programs["ask"](path, file_extension(path))
 				return true, nil

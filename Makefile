@@ -26,6 +26,7 @@ CFLAGS  = -Wl,-q -Wall -O3 -std=gnu99 $(DEFS) $(INCLUDES)
 all: $(TARGET).vpk
 
 $(TARGET).vpk: eboot.bin vpktmp/lib/vitafm.lua $(wildcard lua/*) $(BOOTSCRIPT)
+	rm ../$@ || true
 	mkdir -p vpktmp/sce_sys || true
 	mkdir vpktmp/lib || true
 	vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" vpktmp/sce_sys/param.sfo
@@ -42,7 +43,7 @@ eboot.bin: $(TARGET).velf
 	$(PREFIX)-strip -g $<
 	vita-elf-create $< $@ >/dev/null
 
-vpktmp/lib/vitafm.lua: $(wildcard src/vitafm/src/*lua) $(wildcard src/vitafm/src/programs/*)
+vpktmp/lib/vitafm.lua: src/vitafm/src/types.lua src/vitafm/src/vitafm_base.lua src/vitafm/src/vitafm_launch.lua  $(wildcard src/vitafm/src/programs/*)
 	mkdir -p vpktmp/lib || true
 	make -C src/vitafm
 	cp src/vitafm/vitafm.lua $@
