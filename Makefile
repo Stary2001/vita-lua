@@ -29,10 +29,15 @@ $(TARGET).vpk: eboot.bin vpktmp/lib/vitafm.lua $(wildcard lua/*.lua) lua/vfs/ini
 	rm $@ || true
 	mkdir -p vpktmp/sce_sys || true
 	mkdir vpktmp/lib || true
+	mkdir vpktmp/sce_sys/livearea/contents -p || true
 	vita-mksfoex -s TITLE_ID=$(TITLE_ID) "$(TARGET)" vpktmp/sce_sys/param.sfo
 	cp eboot.bin vpktmp/eboot.bin
 	cp $(BOOTSCRIPT) vpktmp/boot.lua
 	cp $(FONT) vpktmp/default_font.ttf
+	cp meta/icon0.png vpktmp/sce_sys/icon0.png
+	cp meta/template.xml vpktmp/sce_sys/livearea/contents/template.xml
+	cp meta/bg.png vpktmp/sce_sys/livearea/contents/bg.png
+	cp meta/startup.png vpktmp/sce_sys/livearea/contents/startup.png
 	cp lua/*.lua vpktmp/lib
 	mkdir -p vpktmp/lib/vfs/backends || true
 	cp lua/vfs/init.lua lua/vfs/LICENSE vpktmp/lib/vfs
@@ -58,7 +63,7 @@ $(TARGET).elf: $(OBJS) $(FFI_BINDINGS_O) src/ffi_init.o
 	$(CC) $(CFLAGS) $^ $(LIBS) $(LUAJIT_LIBS) -o $@
 
 clean:
-	rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) src/ffi_init.c vpktmp
+	rm -rf $(TARGET).velf $(TARGET).elf $(TARGET).vpk $(OBJS) eboot.bin src/ffi_init.c vpktmp
 	make -C src/vitafm clean
 
 vpksend: $(TARGET).vpk
